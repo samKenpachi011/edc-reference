@@ -8,6 +8,7 @@ from .models import CrfOne, SubjectVisit, CrfWithBadField, CrfWithDuplicateField
 from edc_reference.tests.models import CrfWithUnknownDatatype
 from uuid import uuid4
 from pprint import pprint
+from edc_reference.reference_helper import ReferenceHelper
 
 
 class TestModel(TestCase):
@@ -129,3 +130,33 @@ class TestModel(TestCase):
             CrfWithUnknownDatatype.objects.create,
             subject_visit=self.subject_visit,
             field_uuid=uuid4())
+
+    @tag('1')
+    def test_reference_helper_sets_attr(self):
+        integer = 100
+        CrfOne.objects.create(
+            subject_visit=self.subject_visit,
+            field_int=integer)
+        reference = ReferenceHelper(
+            field_name='field_int',
+            visit=self.subject_visit,
+            model='edc_reference.crfone')
+        self.assertEqual(reference.field_int, integer)
+
+    @tag('1')
+    def test_reference_helper_sets_attr_even_if_none(self):
+        CrfOne.objects.create(
+            subject_visit=self.subject_visit)
+        reference = ReferenceHelper(
+            field_name='field_int',
+            visit=self.subject_visit,
+            model='edc_reference.crfone')
+        self.assertEqual(reference.field_int, None)
+
+    @tag('1')
+    def test_reference_helper_does_not_set_attr_if_no_object(self):
+        reference = ReferenceHelper(
+            field_name='field_int',
+            visit=self.subject_visit,
+            model='edc_reference.crfone')
+        self.assertRaises(AttributeError, getattr, reference, 'field_int')

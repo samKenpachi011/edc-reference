@@ -29,6 +29,9 @@ class Reference(BaseUuidModel):
 
     value_datetime = models.DateTimeField(null=True)
 
+    def __str__(self):
+        return f'{self.identifier}@{self.timepoint} {self.model}.{self.field_name}'
+
     def update_value(self, value=None, field=None, model=None):
         self.label_lower = model
         self.datatype = field.get_internal_type()
