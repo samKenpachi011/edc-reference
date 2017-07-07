@@ -7,6 +7,7 @@ from ..model_mixins import ReferenceDuplicateField, ReferenceFieldNotFound
 from .models import CrfOne, SubjectVisit, CrfWithBadField, CrfWithDuplicateField
 from edc_reference.tests.models import CrfWithUnknownDatatype
 from uuid import uuid4
+from pprint import pprint
 
 
 class TestModel(TestCase):
