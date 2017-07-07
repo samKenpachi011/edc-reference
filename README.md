@@ -57,7 +57,7 @@ The `Reference` model will be updated:
         report_datetime=crf_one.report_datetime,
         field_name='f1')
         
-    >>>reference.__dict__
+    >>> reference.__dict__
     { ...
      'datatype': 'CharField',
      'field_name': 'f1',
@@ -71,5 +71,10 @@ The `Reference` model will be updated:
      'value_str': 'erik',
      ...}    
  
+ 
+ Get the `value` from the reference instance:
+ 
+    >>> reference.value
+    'erik'
     
     
