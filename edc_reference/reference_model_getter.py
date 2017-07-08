@@ -1,4 +1,5 @@
 from django.apps import apps as django_apps
+from django.core.exceptions import ObjectDoesNotExist
 
 
 class ReferenceModelGetter:
@@ -9,22 +10,32 @@ class ReferenceModelGetter:
     """
 
     def __init__(self, model_obj=None, field_name=None,
-                 model=None, visit=None, reference_model=None):
+                 model=None, visit=None, reference_model=None, create=None):
         self._object = None
         self.has_value = False
         if model_obj:
             self.model = model_obj._meta.label_lower
             self.model_obj = model_obj
-            self.reference_model_cls = django_apps.get_model(
-                model_obj.edc_reference_model)
+            reference_model = model_obj.edc_reference_model
             self.visit = model_obj.visit
         else:
             self.model = model
             self.model_obj = None
-            self.reference_model_cls = django_apps.get_model(reference_model)
             self.visit = visit
+        reference_model_cls = django_apps.get_model(reference_model)
         self.field_name = field_name
-        self.value = getattr(self.object, 'value')
+        try:
+            self.object = reference_model_cls.objects.get(**self._options)
+        except ObjectDoesNotExist:
+            if create:
+                self.object = reference_model_cls.objects.create(
+                    **self._options)
+            else:
+                self.object = None
+            self.value = None
+        else:
+            self.value = getattr(self.object, 'value')
+            self.has_value = True
         setattr(self, self.field_name, self.value)
 
     def __repr__(self):
@@ -39,16 +50,3 @@ class ReferenceModelGetter:
             report_datetime=self.visit.report_datetime,
             timepoint=self.visit.visit_code,
             field_name=self.field_name)
-
-    @property
-    def object(self):
-        if not self._object:
-            try:
-                self._object = self.reference_model_cls.objects.get(
-                    **self._options)
-            except self.reference_model_cls.DoesNotExist:
-                self._object = self.reference_model_cls.objects.create(
-                    **self._options)
-            else:
-                self.has_value = True
-        return self._object
