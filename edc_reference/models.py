@@ -33,6 +33,9 @@ class Reference(BaseUuidModel):
         return f'{self.identifier}@{self.timepoint} {self.model}.{self.field_name}'
 
     def update_value(self, value=None, field=None, model=None):
+        """Updates the correct `value` field based on the
+        field class datatype.
+        """
         self.label_lower = model
         self.datatype = field.get_internal_type()
         update = None
