@@ -8,12 +8,11 @@ from edc_base.utils import get_utcnow
 from ..models import Reference, ReferenceFieldDatatypeNotFound
 from ..reference_model_deleter import ReferenceModelDeleter
 from ..reference_model_getter import ReferenceModelGetter
-from ..reference_model_updater import ReferenceFieldNotFound
-from ..reference_model_updater import ReferenceModelUpdater
-from .models import CrfOne, SubjectVisit, CrfWithBadField, CrfWithDuplicateField
-from .models import CrfWithUnknownDatatype, TestModel
-from ..site import site_reference_fields, ReferenceModelConfig, ReferenceFieldValidationError
-from edc_reference.site import SiteReferenceFieldsError
+from ..reference_model_updater import ReferenceModelUpdater, ReferenceFieldNotFound
+from ..site import SiteReferenceFieldsError, ReferenceFieldValidationError
+from ..site import site_reference_fields, ReferenceModelConfig, ReferenceDuplicateField
+from .models import CrfOne, SubjectVisit
+from .models import CrfWithUnknownDatatype, TestModel, SubjectRequisition
 
 
 class TestReferenceModel(TestCase):
@@ -73,6 +72,18 @@ class TestReferenceModel(TestCase):
             timepoint=self.subject_visit.visit_code,
             field_name='field_str')
         self.assertEqual(reference.value, 'bob')
+
+    def test_updater_with_bad_field_name(self):
+        site_reference_fields.registry = {}
+        self.testmodel_reference = ReferenceModelConfig(
+            model='edc_reference.testmodel', fields=['blah'])
+        site_reference_fields.register(self.testmodel_reference)
+        model_obj = TestModel.objects.create(
+            subject_visit=self.subject_visit,
+            field_str='erik')
+        self.assertRaises(
+            ReferenceFieldNotFound,
+            ReferenceModelUpdater, model_obj=model_obj)
 
     def test_deleter(self):
         model_obj = TestModel.objects.create(
@@ -202,6 +213,13 @@ class TestReferenceModel(TestCase):
             field_name='field_int')
         self.assertEqual(reference.value, None)
 
+    def test_model_raises_on_duplicate_field_name(self):
+        self.assertRaises(
+            ReferenceDuplicateField,
+            ReferenceModelConfig,
+            model='edc_reference.crfwithduplicatefield',
+            fields=['field_int', 'field_int', 'field_datetime', 'field_str'])
+
     def test_model_raises_on_bad_field_name(self):
         reference_config = ReferenceModelConfig(
             model='edc_reference.crfwithbadfield',
@@ -214,6 +232,15 @@ class TestReferenceModel(TestCase):
         reference_config = ReferenceModelConfig(
             model='edc_reference.crfwithbadfield',
             fields=['blah1', 'blah2', 'blah3', 'blah4'])
+        site_reference_fields.register(reference_config)
+        self.assertRaises(
+            SiteReferenceFieldsError,
+            site_reference_fields.validate)
+
+    def test_raises_on_missing_model_mixin(self):
+        reference_config = ReferenceModelConfig(
+            model='edc_reference.subjectvisit',
+            fields=['report_datetime'])
         site_reference_fields.register(reference_config)
         self.assertRaises(
             SiteReferenceFieldsError,
@@ -267,3 +294,72 @@ class TestReferenceModel(TestCase):
             model='edc_reference.crfone',
             visit=crf_one.visit)
         self.assertEqual(reference.field_int, integer)
+
+    def test_reference_getter_with_bad_field(self):
+        integer = 100
+        crf_one = CrfOne.objects.create(
+            subject_visit=self.subject_visit,
+            field_int=integer)
+        reference = ReferenceModelGetter(
+            field_name='blah',
+            model='edc_reference.crfone',
+            visit=crf_one.visit)
+        self.assertFalse(reference.has_value)
+        self.assertIsNone(reference.value)
+
+    def test_model_manager_crf(self):
+        strval = 'erik'
+        integer = 100
+        dte = date.today()
+        dtetime = get_utcnow()
+        CrfOne.objects.create(
+            subject_visit=self.subject_visit,
+            field_str=strval,
+            field_int=integer,
+            field_date=dte,
+            field_datetime=dtetime)
+        qs = Reference.objects.filter_crf_for_visit(
+            'edc_reference.crfone', self.subject_visit)
+        self.assertEqual(qs.count(), 4)
+
+    def test_model_manager_crf_by_field(self):
+        strval = 'erik'
+        integer = 100
+        dte = date.today()
+        dtetime = get_utcnow()
+        CrfOne.objects.create(
+            subject_visit=self.subject_visit,
+            field_str=strval,
+            field_int=integer,
+            field_date=dte,
+            field_datetime=dtetime)
+        obj = Reference.objects.get_crf_for_visit(
+            'edc_reference.crfone', self.subject_visit, 'field_str')
+        self.assertEqual(obj.value, 'erik')
+        obj = Reference.objects.get_crf_for_visit(
+            'edc_reference.crfone', self.subject_visit, 'field_int')
+        self.assertEqual(obj.value, integer)
+        obj = Reference.objects.get_crf_for_visit(
+            'edc_reference.crfone', self.subject_visit, 'field_date')
+        self.assertEqual(obj.value, dte)
+        obj = Reference.objects.get_crf_for_visit(
+            'edc_reference.crfone', self.subject_visit, 'field_datetime')
+        self.assertEqual(obj.value, dtetime)
+        obj = Reference.objects.get_crf_for_visit(
+            'edc_reference.crfone', self.subject_visit, 'blah')
+        self.assertIsNone(obj)
+
+    def test_model_manager_requisition(self):
+        reference_config = ReferenceModelConfig(
+            model='edc_reference.subjectrequisition',
+            fields=['panel_name'])
+        site_reference_fields.register(reference_config)
+        SubjectRequisition.objects.create(
+            subject_visit=self.subject_visit,
+            panel_name='cd4')
+        obj = Reference.objects.get_requisition_for_visit(
+            'edc_reference.subjectrequisition', self.subject_visit, panel_name='cd4')
+        self.assertEqual(obj.value, 'cd4')
+        obj = Reference.objects.get_requisition_for_visit(
+            'edc_reference.subjectrequisition', self.subject_visit, panel_name='blah')
+        self.assertIsNone(obj)

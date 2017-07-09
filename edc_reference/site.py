@@ -64,6 +64,12 @@ class ReferenceModelConfig:
                 raise ReferenceFieldValidationError(
                     f'Invalid reference field. Got {field_name} not found '
                     f'on model {repr(model_cls)}. See {repr(self)}.')
+        try:
+            model_cls.edc_reference_model_updater_cls
+            model_cls.edc_reference_model_deleter_cls
+        except AttributeError:
+            raise ReferenceFieldValidationError(
+                f'Missing reference model mixin. See model {repr(model_cls)}')
 
 
 class Site:
@@ -84,13 +90,15 @@ class Site:
         try:
             return self.registry.get(model).field_names
         except AttributeError:
-            return []
+            raise SiteReferenceFieldsError(
+                f'Model not registered. Got {model}')
 
     def get_reference_model(self, model=None):
         try:
             return self.registry.get(model).reference_model
         except AttributeError:
-            return None
+            raise SiteReferenceFieldsError(
+                f'Model not registered. Got {model}')
 
     def validate(self):
         """Validates the reference data for all classes in the

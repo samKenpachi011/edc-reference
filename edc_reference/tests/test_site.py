@@ -4,9 +4,9 @@ from ..site import site_reference_fields, ReferenceModelConfig
 from ..site import AlreadyRegistered, SiteReferenceFieldsImportError
 from ..site import ReferenceFieldValidationError, ReferenceModelValidationError
 from ..site import ReferenceDuplicateField
+from edc_reference.site import SiteReferenceFieldsError
 
 
-@tag('site')
 class TestSite(TestCase):
 
     def test_site_register(self):
@@ -89,3 +89,17 @@ class TestSite(TestCase):
         self.assertRaises(
             ReferenceDuplicateField,
             ReferenceModelConfig, fields=fields, model=model)
+
+    def test_not_registered_for_fields(self):
+        model = 'edc_reference.crfone'
+        site_reference_fields.registry = {}
+        self.assertRaises(
+            SiteReferenceFieldsError,
+            site_reference_fields.get_fields, model)
+
+    def test_not_registered_for_reference_model(self):
+        model = 'edc_reference.crfone'
+        site_reference_fields.registry = {}
+        self.assertRaises(
+            SiteReferenceFieldsError,
+            site_reference_fields.get_reference_model, model)
