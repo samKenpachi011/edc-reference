@@ -1,6 +1,8 @@
 from django.apps import apps as django_apps
 from django.db import transaction
 
+from .site import site_reference_fields
+
 
 class ReferenceModelDeleter:
 
@@ -11,18 +13,14 @@ class ReferenceModelDeleter:
     """
 
     def __init__(self, model_obj=None):
-        try:
-            model_obj.edc_reference_model
-        except AttributeError:
-            pass
-        else:
-            self.reference_model_cls = django_apps.get_model(
-                model_obj.edc_reference_model)
-            self.model_obj = model_obj
-            self.reference_objects = self.reference_model_cls.objects.filter(
-                **self.options)
-            with transaction.atomic():
-                self.reference_objects.delete()
+        reference_model = site_reference_fields.get_reference_model(
+            model=model_obj._meta.label_lower)
+        self.reference_model_cls = django_apps.get_model(reference_model)
+        self.model_obj = model_obj
+        self.reference_objects = self.reference_model_cls.objects.filter(
+            **self.options)
+        with transaction.atomic():
+            self.reference_objects.delete()
 
     @property
     def options(self):

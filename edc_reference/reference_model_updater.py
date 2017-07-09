@@ -1,8 +1,5 @@
 from .reference_model_getter import ReferenceModelGetter
-
-
-class ReferenceDuplicateField(Exception):
-    pass
+from .site import site_reference_fields
 
 
 class ReferenceFieldNotFound(Exception):
@@ -17,12 +14,8 @@ class ReferenceModelUpdater:
     getter_cls = ReferenceModelGetter
 
     def __init__(self, model_obj=None):
-        # validate reference fields for duplicates
-        edc_reference_fields = list(set(model_obj.edc_reference_fields))
-        if len(edc_reference_fields) != len(model_obj.edc_reference_fields):
-            raise ReferenceDuplicateField(
-                f'Duplicate field detected. Got {model_obj.edc_reference_fields}. '
-                f'See model \'{model_obj._meta.verbose_name}\'')
+        edc_reference_fields = site_reference_fields.get_fields(
+            model=model_obj._meta.label_lower)
         # loop through fields and update or create each
         # reference model instance
         for field_name in edc_reference_fields:

@@ -8,32 +8,41 @@ from edc_base.utils import get_utcnow
 from ..models import Reference, ReferenceFieldDatatypeNotFound
 from ..reference_model_deleter import ReferenceModelDeleter
 from ..reference_model_getter import ReferenceModelGetter
-from ..reference_model_updater import ReferenceFieldNotFound, ReferenceDuplicateField
+from ..reference_model_updater import ReferenceFieldNotFound
 from ..reference_model_updater import ReferenceModelUpdater
 from .models import CrfOne, SubjectVisit, CrfWithBadField, CrfWithDuplicateField
 from .models import CrfWithUnknownDatatype, TestModel
+from ..site import site_reference_fields, ReferenceModelConfig, ReferenceFieldValidationError
+from edc_reference.site import SiteReferenceFieldsError
 
 
 class TestReferenceModel(TestCase):
 
     def setUp(self):
+        site_reference_fields.registry = {}
         self.subject_identifier = '1'
         self.subject_visit = SubjectVisit.objects.create(
             subject_identifier=self.subject_identifier,
             visit_code='code')
+        self.testmodel_reference = ReferenceModelConfig(
+            model='edc_reference.testmodel', fields=['field_str'])
+        self.crfone_reference = ReferenceModelConfig(
+            model='edc_reference.crfone',
+            fields=['field_str', 'field_date', 'field_datetime', 'field_int'])
+
+        site_reference_fields.register(self.testmodel_reference)
+        site_reference_fields.register(self.crfone_reference)
 
     def test_updater_repr(self):
         model_obj = TestModel.objects.create(
             subject_visit=self.subject_visit,
             field_str='erik')
-        model_obj.reference_model = 'edc_reference.reference'
         self.assertTrue(repr(ReferenceModelUpdater(model_obj=model_obj)))
 
     def test_model_repr(self):
         model_obj = TestModel.objects.create(
             subject_visit=self.subject_visit,
             field_str='erik')
-        model_obj.reference_model = 'edc_reference.reference'
         ReferenceModelUpdater(model_obj=model_obj)
         reference = Reference.objects.get(
             identifier=self.subject_identifier,
@@ -45,7 +54,6 @@ class TestReferenceModel(TestCase):
         model_obj = TestModel.objects.create(
             subject_visit=self.subject_visit,
             field_str='erik')
-        model_obj.reference_model = 'edc_reference.reference'
         ReferenceModelUpdater(model_obj=model_obj)
         reference = Reference.objects.get(
             identifier=self.subject_identifier,
@@ -57,7 +65,6 @@ class TestReferenceModel(TestCase):
         model_obj = TestModel.objects.create(
             subject_visit=self.subject_visit,
             field_str='erik')
-        model_obj.reference_model = 'edc_reference.reference'
         ReferenceModelUpdater(model_obj=model_obj)
         model_obj.field_str = 'bob'
         ReferenceModelUpdater(model_obj=model_obj)
@@ -71,7 +78,6 @@ class TestReferenceModel(TestCase):
         model_obj = TestModel.objects.create(
             subject_visit=self.subject_visit,
             field_str='erik')
-        model_obj.reference_model = 'edc_reference.reference'
         ReferenceModelUpdater(model_obj=model_obj)
         model_obj.delete()
         ReferenceModelDeleter(model_obj=model_obj)
@@ -89,19 +95,21 @@ class TestReferenceModel(TestCase):
         crf_one = CrfOne.objects.create(
             subject_visit=self.subject_visit,
             field_str='erik')
+        self.assertGreater(Reference.objects.all().count(), 0)
         crf_one.delete()
         self.assertEqual(0, Reference.objects.all().count())
 
     def test_model_creates_reference(self):
-        crf_one = CrfOne.objects.create(
+        CrfOne.objects.create(
             subject_visit=self.subject_visit,
             field_str='erik')
-        self.assertEqual(len(crf_one.edc_reference_fields), 4)
-        self.assertEqual(len(crf_one.edc_reference_fields),
-                         Reference.objects.all().count())
+        self.assertEqual(
+            len(site_reference_fields.get_fields(
+                'edc_reference.crfone')), 4)
+        self.assertEqual(Reference.objects.all().count(), 4)
 
     def test_model_creates_reference2(self):
-        crf_one = CrfOne.objects.create(
+        CrfOne.objects.create(
             subject_visit=self.subject_visit,
             field_str='erik')
         try:
@@ -109,7 +117,7 @@ class TestReferenceModel(TestCase):
                 identifier=self.subject_identifier,
                 timepoint=self.subject_visit.visit_code,
                 report_datetime=self.subject_visit.report_datetime,
-                model=crf_one._meta.label_lower,
+                model='edc_reference.crfone',
                 field_name='field_str')
         except ObjectDoesNotExist as e:
             self.fail(f'ObjectDoesNotExist unexpectedly raised. Got {e}')
@@ -169,13 +177,13 @@ class TestReferenceModel(TestCase):
         integer = 100
         dte = date.today()
         dtetime = get_utcnow()
-        crf_one = CrfOne.objects.create(
+        CrfOne.objects.create(
             subject_visit=self.subject_visit,
             field_str=strval,
             field_int=integer,
             field_date=dte,
             field_datetime=dtetime)
-        for field_name in crf_one.edc_reference_fields:
+        for field_name in site_reference_fields.get_fields('edc_reference.crfone'):
             reference = Reference.objects.get(
                 identifier=self.subject_identifier,
                 timepoint=self.subject_visit.visit_code,
@@ -195,20 +203,27 @@ class TestReferenceModel(TestCase):
         self.assertEqual(reference.value, None)
 
     def test_model_raises_on_bad_field_name(self):
+        reference_config = ReferenceModelConfig(
+            model='edc_reference.crfwithbadfield',
+            fields=['blah1', 'blah2', 'blah3', 'blah4'])
         self.assertRaises(
-            ReferenceFieldNotFound,
-            CrfWithBadField.objects.create,
-            subject_visit=self.subject_visit,
-            field_int=None)
+            ReferenceFieldValidationError,
+            reference_config.validate)
 
-    def test_model_raises_on_duplicate_field_name(self):
+    def test_model_raises_on_bad_field_name_validated_by_site(self):
+        reference_config = ReferenceModelConfig(
+            model='edc_reference.crfwithbadfield',
+            fields=['blah1', 'blah2', 'blah3', 'blah4'])
+        site_reference_fields.register(reference_config)
         self.assertRaises(
-            ReferenceDuplicateField,
-            CrfWithDuplicateField.objects.create,
-            subject_visit=self.subject_visit,
-            field_int=None)
+            SiteReferenceFieldsError,
+            site_reference_fields.validate)
 
     def test_model_raises_on_unknown_field_datatype(self):
+        reference_config = ReferenceModelConfig(
+            model='edc_reference.CrfWithUnknownDatatype',
+            fields=['field_uuid'])
+        site_reference_fields.register(reference_config)
         self.assertRaises(
             ReferenceFieldDatatypeNotFound,
             CrfWithUnknownDatatype.objects.create,
@@ -250,6 +265,5 @@ class TestReferenceModel(TestCase):
         reference = ReferenceModelGetter(
             field_name='field_int',
             model='edc_reference.crfone',
-            visit=crf_one.visit,
-            reference_model=crf_one.edc_reference_model)
+            visit=crf_one.visit)
         self.assertEqual(reference.field_int, integer)

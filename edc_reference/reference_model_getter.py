@@ -1,5 +1,6 @@
 from django.apps import apps as django_apps
 from django.core.exceptions import ObjectDoesNotExist
+from edc_reference.site import site_reference_fields
 
 
 class ReferenceModelGetter:
@@ -10,18 +11,19 @@ class ReferenceModelGetter:
     """
 
     def __init__(self, model_obj=None, field_name=None,
-                 model=None, visit=None, reference_model=None, create=None):
+                 model=None, visit=None, create=None):
         self._object = None
         self.has_value = False
         if model_obj:
             self.model = model_obj._meta.label_lower
             self.model_obj = model_obj
-            reference_model = model_obj.edc_reference_model
             self.visit = model_obj.visit
         else:
             self.model = model
             self.model_obj = None
             self.visit = visit
+        reference_model = site_reference_fields.get_reference_model(
+            model=self.model)
         reference_model_cls = django_apps.get_model(reference_model)
         self.field_name = field_name
         try:

@@ -8,8 +8,6 @@ class ReferenceModelMixin(models.Model):
 
     edc_reference_model_deleter_cls = ReferenceModelDeleter
     edc_reference_model_updater_cls = ReferenceModelUpdater
-    edc_reference_model = 'edc_reference.reference'
-    edc_reference_model_fields = []
 
     def save(self, *args, **kwargs):
         self.edc_reference_model_updater_cls(model_obj=self)

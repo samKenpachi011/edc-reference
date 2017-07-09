@@ -28,9 +28,6 @@ class SubjectVisit(BaseUuidModel):
 
 class TestModel(CrfModelMixin, BaseUuidModel):
 
-    edc_reference_fields = ['field_str']
-    edc_reference_model = 'edc_reference.reference'
-
     subject_visit = models.ForeignKey(SubjectVisit, on_delete=PROTECT)
 
     report_datetime = models.DateTimeField(default=get_utcnow)
@@ -39,9 +36,6 @@ class TestModel(CrfModelMixin, BaseUuidModel):
 
 
 class CrfOne(CrfModelMixin, ReferenceModelMixin, BaseUuidModel):
-
-    edc_reference_fields = ['field_str', 'field_date',
-                            'field_datetime', 'field_int']
 
     subject_visit = models.ForeignKey(SubjectVisit, on_delete=PROTECT)
 
@@ -57,8 +51,6 @@ class CrfOne(CrfModelMixin, ReferenceModelMixin, BaseUuidModel):
 
 
 class CrfWithBadField(CrfModelMixin, ReferenceModelMixin, BaseUuidModel):
-
-    edc_reference_fields = ['blah1', 'blah2', 'blah3', 'blah4']
 
     subject_visit = models.ForeignKey(SubjectVisit, on_delete=PROTECT)
 
@@ -92,8 +84,6 @@ class CrfWithDuplicateField(CrfModelMixin, ReferenceModelMixin, BaseUuidModel):
 
 
 class CrfWithUnknownDatatype(CrfModelMixin, ReferenceModelMixin, BaseUuidModel):
-
-    edc_reference_fields = ['field_uuid', ]
 
     subject_visit = models.ForeignKey(SubjectVisit, on_delete=PROTECT)
 
