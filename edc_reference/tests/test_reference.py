@@ -253,9 +253,3 @@ class TestReferenceModel(TestCase):
             visit=crf_one.visit,
             reference_model=crf_one.edc_reference_model)
         self.assertEqual(reference.field_int, integer)
-
-#     def test_reference_helper_does_not_set_attr_if_no_object(self):
-#         reference = ReferenceModelGetter(
-#             field_name='field_int',
-#             model_obj=CrfOne())
-#         self.assertRaises(AttributeError, getattr, reference, 'field_int')
