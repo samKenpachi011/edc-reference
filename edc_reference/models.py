@@ -1,10 +1,46 @@
 from django.db import models
 
 from edc_base.model_mixins import BaseUuidModel
+from django.core.exceptions import ObjectDoesNotExist
 
 
 class ReferenceFieldDatatypeNotFound(Exception):
     pass
+
+
+class ReferenceManager(models.Manager):
+
+    def filter_crf_for_visit(self, model=None, visit=None):
+        return self.filter(
+            identifier=visit.subject_identifier,
+            model=model,
+            report_datetime=visit.report_datetime,
+            timepoint=visit.visit_code)
+
+    def get_crf_for_visit(self, model=None, visit=None, field_name=None):
+        try:
+            model_obj = self.get(
+                identifier=visit.subject_identifier,
+                model=model,
+                report_datetime=visit.report_datetime,
+                timepoint=visit.visit_code,
+                field_name=field_name)
+        except ObjectDoesNotExist:
+            model_obj = None
+        return model_obj
+
+    def get_requisition_for_visit(self, model=None, visit=None, panel_name=None):
+        try:
+            model_obj = self.get(
+                identifier=visit.subject_identifier,
+                model=model,
+                report_datetime=visit.report_datetime,
+                timepoint=visit.visit_code,
+                field_name='panel_name',
+                value_str=panel_name)
+        except ObjectDoesNotExist:
+            model_obj = None
+        return model_obj
 
 
 class Reference(BaseUuidModel):
@@ -28,6 +64,8 @@ class Reference(BaseUuidModel):
     value_date = models.DateField(null=True)
 
     value_datetime = models.DateTimeField(null=True)
+
+    objects = ReferenceManager()
 
     def __str__(self):
         return f'{self.identifier}@{self.timepoint} {self.model}.{self.field_name}'
