@@ -6,11 +6,12 @@ from uuid import uuid4
 from edc_base.utils import get_utcnow
 
 from ..models import Reference, ReferenceFieldDatatypeNotFound
+from ..reference_model_config import ReferenceModelConfig
+from ..reference_model_config import ReferenceDuplicateField, ReferenceFieldValidationError
 from ..reference_model_deleter import ReferenceModelDeleter
 from ..reference_model_getter import ReferenceModelGetter
 from ..reference_model_updater import ReferenceModelUpdater, ReferenceFieldNotFound
-from ..site import SiteReferenceFieldsError, ReferenceFieldValidationError
-from ..site import site_reference_fields, ReferenceModelConfig, ReferenceDuplicateField
+from ..site import site_reference_fields, SiteReferenceFieldsError
 from .models import CrfOne, SubjectVisit
 from .models import CrfWithUnknownDatatype, TestModel, SubjectRequisition
 

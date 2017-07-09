@@ -1,10 +1,11 @@
 from django.test import TestCase, tag
 
-from ..site import site_reference_fields, ReferenceModelConfig
+from ..reference_model_config import ReferenceModelConfig
+from ..reference_model_config import ReferenceFieldValidationError, ReferenceDuplicateField
+from ..reference_model_config import ReferenceModelValidationError
+from ..site import site_reference_fields
 from ..site import AlreadyRegistered, SiteReferenceFieldsImportError
-from ..site import ReferenceFieldValidationError, ReferenceModelValidationError
-from ..site import ReferenceDuplicateField
-from edc_reference.site import SiteReferenceFieldsError
+from ..site import SiteReferenceFieldsError
 
 
 class TestSite(TestCase):

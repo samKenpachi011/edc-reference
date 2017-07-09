@@ -13,8 +13,6 @@ Declare a model with the `ReferenceModelMixin`.
 
     class CrfOne(ReferenceModelMixin, BaseUuidModel):
     
-        edc_reference_fields = ['f1', 'f4']
-    
         subject_visit = models.ForeignKey(SubjectVisit, on_delete=PROTECT)
     
         report_datetime = models.DateTimeField(default=get_utcnow)
@@ -28,16 +26,14 @@ Declare a model with the `ReferenceModelMixin`.
         f4 = models.DatetimeField(null=True)
 
         
-Using the `edc_reference_fields` class attribute, list the fields to be updated to the reference model.
+Register the model and the relevant fields with the site global, `site_reference_fields`:
 
+    from edc_reference.site import ReferenceModelConfig
 
-    class CrfOne(ReferenceModelMixin, BaseUuidModel):
-    
-        edc_reference_fields = ['f1', 'f4']
-    
-        subject_visit = models.ForeignKey(SubjectVisit, on_delete=PROTECT)
-    
-        [ ... ]
+    reference = ReferenceModelConfig(
+        model='edc_reference.crfone',
+        fields=['f1', 'f4'])
+    site_reference_fields.register(reference)
         
 Create a model instance:
 
@@ -68,13 +64,23 @@ The `Reference` model will be updated:
      'value_date': None,
      'value_datetime': None,
      'value_int': None,
-     'value_str': 'erik',
+     'value_str': 'happiness',
      ...}    
  
  
- Get the `value` from the reference instance:
+Get the `value` from the reference instance:
  
     >>> reference.value
-    'erik'
+    'happiness'
     
+Model managers methods are also available, for example:
+
+    reference = Reference.objects.crf_get_for_visit(
+        model='edc_reference.crfone', 
+        visit=self.subject_visit,
+        field_name='f1')
     
+    >>> reference.value
+    'happiness'
+     
+ 
