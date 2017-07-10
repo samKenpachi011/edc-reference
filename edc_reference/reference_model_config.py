@@ -18,6 +18,8 @@ class ReferenceModelConfig:
     reference_model = 'edc_reference.reference'
 
     def __init__(self, fields=None, model=None):
+        if not fields:
+            raise ReferenceFieldValidationError('No fields declared.')
         self.field_names = list(set(fields))
         self.field_names.sort()
         self.model = model.lower()

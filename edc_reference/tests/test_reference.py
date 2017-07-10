@@ -285,6 +285,23 @@ class TestReferenceModel(TestCase):
             model_obj=crf_one)
         self.assertEqual(reference.field_int, None)
 
+    def test_site_validates_no_fields_raises(self):
+        model = 'edc_reference.crfone'
+        site_reference_fields.registry = {}
+        self.assertRaises(
+            ReferenceFieldValidationError,
+            ReferenceModelConfig,
+            fields=[],
+            model=model)
+
+    def test_site_validates_no_fields_raises2(self):
+        model = 'edc_reference.crfone'
+        site_reference_fields.registry = {}
+        self.assertRaises(
+            ReferenceFieldValidationError,
+            ReferenceModelConfig,
+            model=model)
+
     def test_reference_getter_without_model_obj(self):
         integer = 100
         crf_one = CrfOne.objects.create(
