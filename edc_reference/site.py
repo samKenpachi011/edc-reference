@@ -13,6 +13,10 @@ class AlreadyRegistered(Exception):
     pass
 
 
+class ReferenceConfigNotRegistered(Exception):
+    pass
+
+
 class RegistryNotLoaded(Exception):
     pass
 
@@ -38,6 +42,13 @@ class Site:
                 f'Got {reference.model}')
         self.registry.update({reference.model: reference})
         self.loaded = True
+
+    def reregister(self, reference=None):
+        if reference.model not in self.registry:
+            raise ReferenceConfigNotRegistered(
+                f'Reference model configuration has not been registered. '
+                f'Got {reference.model}')
+        self.registry.update({reference.model: reference})
 
     def get_fields(self, model=None):
         try:
