@@ -34,7 +34,8 @@ class Reference(BaseUuidModel):
     objects = ReferenceManager()
 
     def __str__(self):
-        return f'{self.identifier}@{self.timepoint} {self.model}.{self.field_name}'
+        return (f'{self.identifier}@{self.timepoint} {self.model}.'
+                f'{self.field_name}={self.value}')
 
     def update_value(self, value=None, field=None, internal_type=None):
         """Updates the correct `value` field based on the
@@ -52,6 +53,7 @@ class Reference(BaseUuidModel):
         else:
             raise ReferenceFieldDatatypeNotFound(
                 f'Reference field datatype not found. Got {self.model}.{field.name}.')
+        self.save()
 
     @property
     def value(self):
