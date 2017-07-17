@@ -319,6 +319,19 @@ class TestReferenceModel(TestCase):
             visit_obj=crf_one.visit)
         self.assertEqual(reference.field_int, integer)
 
+    def test_reference_getter_without_using_model_obj(self):
+        integer = 100
+        crf_one = CrfOne.objects.create(
+            subject_visit=self.subject_visit,
+            field_int=integer)
+        reference = ReferenceModelGetter(
+            field_name='field_int',
+            model='edc_reference.crfone',
+            subject_identifier=self.subject_identifier,
+            report_datetime=crf_one.visit.report_datetime,
+            visit_code=crf_one.visit.visit_code)
+        self.assertEqual(reference.field_int, integer)
+
     def test_reference_getter_with_bad_field(self):
         integer = 100
         crf_one = CrfOne.objects.create(

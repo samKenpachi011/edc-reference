@@ -6,9 +6,7 @@ from ..reference_model_config import ReferenceModelValidationError
 from ..site import site_reference_fields
 from ..site import AlreadyRegistered, SiteReferenceFieldsImportError
 from ..site import SiteReferenceFieldsError
-from dateutil.relativedelta import relativedelta
-from edc_reference.tests.models import SubjectVisit, CrfOne
-from edc_base.utils import get_utcnow
+from .dummy import DummySite, DummyVisitSchedule, DummySchedule
 
 
 class TestSite(TestCase):
@@ -108,31 +106,24 @@ class TestSite(TestCase):
             SiteReferenceFieldsError,
             site_reference_fields.get_reference_model, model)
 
-    def test_registered_from_visit_schedule(self):
-        class DummyVisitSchedule:
-            def __init__(self):
-                self.schedules = {}
-                self.visit_model = 'edc_reference.subjectvisit'
-
-        class DummySchedule:
-            def __init__(self):
-                self.enrollment_model = 'edc_reference.enrollment'
-                self.disenrollment_model = 'edc_reference.disenrollment'
-                self.visits = {}
-
-        class DummySite:
-            def __init__(self):
-                self.registry = {}
-
-            def autodiscover(self, *args, **kwargs):
-                pass
-
+    def test_register_reference_models_from_visit_schedule(self):
         site_visit_schedules = DummySite()
         visit_schedule = DummyVisitSchedule()
         schedule = DummySchedule()
         visit_schedule.schedules.update(schedule=schedule)
         site_visit_schedules.registry.update(visit_schedule=visit_schedule)
-
         site_reference_fields.registry = {}
         site_reference_fields.register_from_visit_schedule(
             site_visit_schedules=site_visit_schedules)
+        self.assertTrue(
+            site_reference_fields.get_config(model='edc_reference.crfone'))
+
+    def test_add_fields_to_reference_config(self):
+        model = 'edc_reference.crfone'
+        fields = ['f1']
+        site_reference_fields.registry = {}
+        reference_config = ReferenceModelConfig(fields=fields, model=model)
+        site_reference_fields.register(reference_config)
+        self.assertEqual(reference_config.field_names, ['f1'])
+        site_reference_fields.add_fields_to_config(model, ['f2', 'f3'])
+        self.assertEqual(reference_config.field_names, ['f1', 'f2', 'f3'])

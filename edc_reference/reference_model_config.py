@@ -29,7 +29,7 @@ class ReferenceModelConfig:
 
     def add_fields(self, fields=None):
         self.field_names.extend(fields)
-        self.field_names = list(set(fields))
+        self.field_names = list(set(self.field_names))
         self.field_names.sort()
 
     def __repr__(self):
