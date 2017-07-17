@@ -6,6 +6,9 @@ from django.core.exceptions import ObjectDoesNotExist
 class ReferenceManager(models.Manager):
 
     def filter_crf_for_visit(self, model=None, visit=None):
+        """Returns a queryset of reference model instances
+        for this model on this visit.
+        """
         return self.filter(
             identifier=visit.subject_identifier,
             model=model,
@@ -13,6 +16,9 @@ class ReferenceManager(models.Manager):
             timepoint=visit.visit_code)
 
     def get_crf_for_visit(self, model=None, visit=None, field_name=None):
+        """Returns an instance of reference model
+        for this model on this visit for this field.
+        """
         try:
             model_obj = self.get(
                 identifier=visit.subject_identifier,
@@ -25,6 +31,9 @@ class ReferenceManager(models.Manager):
         return model_obj
 
     def get_requisition_for_visit(self, model=None, visit=None, panel_name=None):
+        """Returns an instance of reference model
+        for this requisition on this visit for this panel.
+        """
         try:
             model_obj = self.get(
                 identifier=visit.subject_identifier,

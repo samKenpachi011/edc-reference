@@ -27,6 +27,11 @@ class ReferenceModelConfig:
             raise ReferenceDuplicateField(
                 f'Duplicate field detected. Got {fields}. See \'{model}\'')
 
+    def add_fields(self, fields=None):
+        self.field_names.extend(fields)
+        self.field_names = list(set(fields))
+        self.field_names.sort()
+
     def __repr__(self):
         return f'{self.__class__.__name__}(model={self.model})'
 

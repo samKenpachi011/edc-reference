@@ -36,12 +36,11 @@ class Reference(BaseUuidModel):
     def __str__(self):
         return f'{self.identifier}@{self.timepoint} {self.model}.{self.field_name}'
 
-    def update_value(self, value=None, field=None, model=None):
+    def update_value(self, value=None, field=None, internal_type=None):
         """Updates the correct `value` field based on the
         field class datatype.
         """
-        self.label_lower = model
-        self.datatype = field.get_internal_type()
+        self.datatype = internal_type or field.get_internal_type()
         update = None
         for fld in self._meta.get_fields():
             if fld.name.startswith('value'):
@@ -52,7 +51,7 @@ class Reference(BaseUuidModel):
             setattr(self, *update),
         else:
             raise ReferenceFieldDatatypeNotFound(
-                f'Reference field datatype not found. Got {model}.{field.name}.')
+                f'Reference field datatype not found. Got {self.model}.{field.name}.')
 
     @property
     def value(self):
@@ -67,3 +66,4 @@ class Reference(BaseUuidModel):
                            'report_datetime', 'model', 'field_name']
         index_together = ['identifier', 'timepoint',
                           'report_datetime', 'model', 'field_name']
+        ordering = ('identifier', 'report_datetime')

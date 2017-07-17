@@ -21,18 +21,22 @@ class TestReferenceModel(TestCase):
     def setUp(self):
         site_reference_fields.registry = {}
         self.subject_identifier = '1'
-        self.subject_visit = SubjectVisit.objects.create(
-            subject_identifier=self.subject_identifier,
-            visit_code='code')
+        subjectvisit_reference = ReferenceModelConfig(
+            model='edc_reference.subjectvisit',
+            fields=['report_datetime', 'visit_code'])
         self.testmodel_reference = ReferenceModelConfig(
             model='edc_reference.testmodel', fields=['field_str'])
         self.crfone_reference = ReferenceModelConfig(
             model='edc_reference.crfone',
             fields=['field_str', 'field_date', 'field_datetime', 'field_int'])
-
+        site_reference_fields.register(subjectvisit_reference)
         site_reference_fields.register(self.testmodel_reference)
         site_reference_fields.register(self.crfone_reference)
+        self.subject_visit = SubjectVisit.objects.create(
+            subject_identifier=self.subject_identifier,
+            visit_code='code')
 
+    @tag('2')
     def test_updater_repr(self):
         model_obj = TestModel.objects.create(
             subject_visit=self.subject_visit,
@@ -107,9 +111,11 @@ class TestReferenceModel(TestCase):
         crf_one = CrfOne.objects.create(
             subject_visit=self.subject_visit,
             field_str='erik')
-        self.assertGreater(Reference.objects.all().count(), 0)
+        self.assertGreater(Reference.objects.filter(
+            model='edc_reference.crfone').count(), 2)
         crf_one.delete()
-        self.assertEqual(0, Reference.objects.all().count())
+        self.assertEqual(0, Reference.objects.filter(
+            model='edc_reference.crfone').count())
 
     def test_model_creates_reference(self):
         CrfOne.objects.create(
@@ -118,7 +124,7 @@ class TestReferenceModel(TestCase):
         self.assertEqual(
             len(site_reference_fields.get_fields(
                 'edc_reference.crfone')), 4)
-        self.assertEqual(Reference.objects.all().count(), 4)
+        self.assertEqual(Reference.objects.all().count(), 6)
 
     def test_model_creates_reference2(self):
         CrfOne.objects.create(
@@ -240,9 +246,9 @@ class TestReferenceModel(TestCase):
 
     def test_raises_on_missing_model_mixin(self):
         reference_config = ReferenceModelConfig(
-            model='edc_reference.subjectvisit',
+            model='edc_reference.TestModel',
             fields=['report_datetime'])
-        site_reference_fields.register(reference_config)
+        site_reference_fields.reregister(reference_config)
         self.assertRaises(
             SiteReferenceFieldsError,
             site_reference_fields.validate)
@@ -302,7 +308,7 @@ class TestReferenceModel(TestCase):
             ReferenceModelConfig,
             model=model)
 
-    def test_reference_getter_without_model_obj(self):
+    def test_reference_getter_without_crf_type_model(self):
         integer = 100
         crf_one = CrfOne.objects.create(
             subject_visit=self.subject_visit,
@@ -310,7 +316,7 @@ class TestReferenceModel(TestCase):
         reference = ReferenceModelGetter(
             field_name='field_int',
             model='edc_reference.crfone',
-            visit=crf_one.visit)
+            visit_obj=crf_one.visit)
         self.assertEqual(reference.field_int, integer)
 
     def test_reference_getter_with_bad_field(self):
@@ -321,7 +327,7 @@ class TestReferenceModel(TestCase):
         reference = ReferenceModelGetter(
             field_name='blah',
             model='edc_reference.crfone',
-            visit=crf_one.visit)
+            model_obj=crf_one.visit)
         self.assertFalse(reference.has_value)
         self.assertIsNone(reference.value)
 

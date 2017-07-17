@@ -5,27 +5,44 @@ from edc_reference.site import site_reference_fields
 
 class ReferenceModelGetter:
     """A class that gets the reference model instance for a given
-    model and field name previously created by the given model.
+    model or attributes of the model.
 
     See also ReferenceModelMixin.
     """
 
-    def __init__(self, model_obj=None, field_name=None,
-                 model=None, visit=None, create=None):
+    def __init__(self, field_name=None, model=None, model_obj=None, visit_obj=None,
+                 subject_identifier=None, report_datetime=None, visit_code=None,
+                 create=None):
         self._object = None
         self.has_value = False
+        self.field_name = field_name
         if model_obj:
-            self.model = model_obj._meta.label_lower
-            self.model_obj = model_obj
-            self.visit = model_obj.visit
-        else:
+            try:
+                # given a crf model as model_obj
+                self.model = model_obj._meta.label_lower
+                self.report_datetime = model_obj.visit.report_datetime
+                self.subject_identifier = model_obj.visit.subject_identifier
+                self.visit_code = model_obj.visit.visit_code
+            except AttributeError:
+                # given a visit model as model_obj
+                self.model = model_obj._meta.label_lower
+                self.subject_identifier = model_obj.subject_identifier
+                self.report_datetime = model_obj.report_datetime
+                self.visit_code = model_obj.visit_code
+        elif visit_obj:
             self.model = model
-            self.model_obj = None
-            self.visit = visit
+            self.subject_identifier = visit_obj.subject_identifier
+            self.report_datetime = visit_obj.report_datetime
+            self.visit_code = visit_obj.visit_code
+        else:
+            # given only the attrs
+            self.model = model
+            self.subject_identifier = subject_identifier
+            self.report_datetime = report_datetime
+            self.visit_code = visit_code
         reference_model = site_reference_fields.get_reference_model(
             model=self.model)
         reference_model_cls = django_apps.get_model(reference_model)
-        self.field_name = field_name
         try:
             self.object = reference_model_cls.objects.get(**self._options)
         except ObjectDoesNotExist:
@@ -41,14 +58,15 @@ class ReferenceModelGetter:
         setattr(self, self.field_name, self.value)
 
     def __repr__(self):
-        return (f'<{self.__class__.__name__}({self.model_obj},\'{self.model}.'
-                f'{self.field_name}\') value={self.value}, has_value={self.has_value}>')
+        return (f'<{self.__class__.__name__}({self.model}.{self.field_name}\','
+                f'\'{self.subject_identifier},{self.report_datetime}'
+                f') value={self.value}, has_value={self.has_value}>')
 
     @property
     def _options(self):
         return dict(
-            identifier=self.visit.subject_identifier,
+            identifier=self.subject_identifier,
             model=self.model,
-            report_datetime=self.visit.report_datetime,
-            timepoint=self.visit.visit_code,
+            report_datetime=self.report_datetime,
+            timepoint=self.visit_code,
             field_name=self.field_name)

@@ -31,6 +31,5 @@ class ReferenceModelUpdater:
                 field_name=field_name,
                 create=True)
             value = getattr(model_obj, field_obj.name)
-            reference.object.update_value(
-                value=value, field=field_obj, model=model_obj._meta.label_lower)
+            reference.object.update_value(value=value, field=field_obj)
             reference.object.save()

@@ -6,6 +6,9 @@ from ..reference_model_config import ReferenceModelValidationError
 from ..site import site_reference_fields
 from ..site import AlreadyRegistered, SiteReferenceFieldsImportError
 from ..site import SiteReferenceFieldsError
+from dateutil.relativedelta import relativedelta
+from edc_reference.tests.models import SubjectVisit, CrfOne
+from edc_base.utils import get_utcnow
 
 
 class TestSite(TestCase):
@@ -104,3 +107,32 @@ class TestSite(TestCase):
         self.assertRaises(
             SiteReferenceFieldsError,
             site_reference_fields.get_reference_model, model)
+
+    def test_registered_from_visit_schedule(self):
+        class DummyVisitSchedule:
+            def __init__(self):
+                self.schedules = {}
+                self.visit_model = 'edc_reference.subjectvisit'
+
+        class DummySchedule:
+            def __init__(self):
+                self.enrollment_model = 'edc_reference.enrollment'
+                self.disenrollment_model = 'edc_reference.disenrollment'
+                self.visits = {}
+
+        class DummySite:
+            def __init__(self):
+                self.registry = {}
+
+            def autodiscover(self, *args, **kwargs):
+                pass
+
+        site_visit_schedules = DummySite()
+        visit_schedule = DummyVisitSchedule()
+        schedule = DummySchedule()
+        visit_schedule.schedules.update(schedule=schedule)
+        site_visit_schedules.registry.update(visit_schedule=visit_schedule)
+
+        site_reference_fields.registry = {}
+        site_reference_fields.register_from_visit_schedule(
+            site_visit_schedules=site_visit_schedules)
