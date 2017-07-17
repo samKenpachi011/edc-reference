@@ -2,4 +2,4 @@ from .reference_model_deleter import ReferenceModelDeleter
 from .reference_model_getter import ReferenceModelGetter
 from .reference_model_updater import ReferenceModelUpdater
 from .reference_model_updater import ReferenceFieldNotFound
-from .site import site_reference_fields, ReferenceDuplicateField
+from .site import site_reference_configs, ReferenceDuplicateField

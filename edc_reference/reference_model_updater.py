@@ -1,5 +1,5 @@
 from .reference_model_getter import ReferenceModelGetter
-from .site import site_reference_fields
+from .site import site_reference_configs
 
 
 class ReferenceFieldNotFound(Exception):
@@ -14,7 +14,7 @@ class ReferenceModelUpdater:
     getter_cls = ReferenceModelGetter
 
     def __init__(self, model_obj=None):
-        edc_reference_fields = site_reference_fields.get_fields(
+        edc_reference_fields = site_reference_configs.get_fields(
             model=model_obj._meta.label_lower)
         # loop through fields and update or create each
         # reference model instance

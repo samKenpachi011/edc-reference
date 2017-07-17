@@ -104,13 +104,13 @@ class Site:
                 mod = import_module(app)
                 try:
                     before_import_registry = copy.copy(
-                        site_reference_fields.registry)
+                        site_reference_configs.registry)
                     import_module(f'{app}.{module_name}')
                     sys.stdout.write(
                         f' * registered reference fields from application \'{app}\'\n')
                 except Exception as e:
                     if f'No module named \'{app}.{module_name}\'' not in str(e):
-                        site_reference_fields.registry = before_import_registry
+                        site_reference_configs.registry = before_import_registry
                         if module_has_submodule(mod, module_name):
                             raise SiteReferenceFieldsImportError(e) from e
             except ImportError:
@@ -151,4 +151,4 @@ class Site:
         reference_config.add_fields(fields)
 
 
-site_reference_fields = Site()
+site_reference_configs = Site()

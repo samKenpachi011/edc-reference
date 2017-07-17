@@ -1,5 +1,5 @@
 from .models import Reference
-from .site import site_reference_fields
+from .site import site_reference_configs
 
 
 class RefError(Exception):
@@ -19,7 +19,7 @@ class Ref:
         model_values = {}
         model_values = model_values.get(self.model, {})
         model_values.update(model=self.model)
-        field_names = site_reference_fields.get_fields(self.model)
+        field_names = site_reference_configs.get_fields(self.model)
         for field_name in field_names:
             reference = Reference.objects.get(
                 identifier=self.subject_identifier,

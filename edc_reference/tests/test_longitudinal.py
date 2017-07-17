@@ -5,7 +5,7 @@ from edc_base.utils import get_utcnow
 
 from ..longitudinal_ref_set import LongitudinalRefSet
 from ..reference_model_config import ReferenceModelConfig
-from ..site import site_reference_fields
+from ..site import site_reference_configs
 from .models import SubjectVisit, CrfOne
 
 
@@ -13,16 +13,16 @@ class TestLongitudinal(TestCase):
 
     def setUp(self):
         self.subject_identifier = '12345'
-        site_reference_fields.registry = {}
-        site_reference_fields.loaded = False
+        site_reference_configs.registry = {}
+        site_reference_configs.loaded = False
         reference = ReferenceModelConfig(
             model='edc_reference.subjectvisit',
             fields=['report_datetime', 'visit_code'])
-        site_reference_fields.register(reference=reference)
+        site_reference_configs.register(reference=reference)
         reference = ReferenceModelConfig(
             model='edc_reference.crfone',
             fields=['field_date', 'field_datetime', 'field_int', 'field_str'])
-        site_reference_fields.register(reference=reference)
+        site_reference_configs.register(reference=reference)
 
         values = [
             ('NEG', get_utcnow() - relativedelta(years=3)),

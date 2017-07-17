@@ -1,6 +1,6 @@
 from django.apps import apps as django_apps
 from django.core.exceptions import ObjectDoesNotExist
-from edc_reference.site import site_reference_fields
+from edc_reference.site import site_reference_configs
 
 
 class ReferenceModelGetter:
@@ -40,7 +40,7 @@ class ReferenceModelGetter:
             self.subject_identifier = subject_identifier
             self.report_datetime = report_datetime
             self.visit_code = visit_code
-        reference_model = site_reference_fields.get_reference_model(
+        reference_model = site_reference_configs.get_reference_model(
             model=self.model)
         reference_model_cls = django_apps.get_model(reference_model)
         try:
