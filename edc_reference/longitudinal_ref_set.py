@@ -15,6 +15,7 @@ class Ref:
         self.subject_identifier = subject_identifier
         self.timepoint = timepoint
         self.model = model
+        self._get_set = None
         model_values = {}
         model_values = model_values.get(self.model, {})
         model_values.update(model=self.model)
@@ -102,6 +103,8 @@ class LongitudinalRefSet:
         return self
 
     def _reorder_sets(self):
+        """Reorders all sets.
+        """
         for attr in self.__dict__:
             if attr.endswith('_set'):
                 setattr(self, attr,
@@ -109,6 +112,27 @@ class LongitudinalRefSet:
                          for t in self._refs])
 
     def get(self, field_name=None):
+        """Sets attr `{field_name}_set` with the value of field_name
+        for each ref in self._refs ordered by the current ordering.
+        """
         setattr(self, f'{field_name}_set',
                 [getattr(t, field_name) for t in self._refs])
+        self._lastget = lambda x: getattr(x, f'{field_name}_set')
+
         return self
+
+    def last(self):
+        """Returns the last value from the get.
+        """
+        try:
+            return self._lastget(self)[-1:][0]
+        except IndexError:
+            return None
+
+    def first(self):
+        """Returns the first value from the get.
+        """
+        try:
+            return self._lastget(self)[0]
+        except IndexError:
+            return None

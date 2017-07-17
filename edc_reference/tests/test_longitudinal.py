@@ -90,6 +90,17 @@ class TestLongitudinal(TestCase):
             ['POS', 'POS', 'NEG'])
 
     @tag('1')
+    def test_get_last(self):
+        refset = LongitudinalRefSet(
+            subject_identifier=self.subject_identifier,
+            visit_model='edc_reference.subjectvisit',
+            model='edc_reference.crfone',
+            reference_model=Reference).order_by('field_datetime')
+        self.assertEqual(refset.get('field_str').last(), 'POS')
+        self.assertEqual(
+            refset.get('field_str').order_by('-field_datetime').last(), 'NEG')
+
+    @tag('1')
     def test_repr(self):
         refset = LongitudinalRefSet(
             subject_identifier=self.subject_identifier,
