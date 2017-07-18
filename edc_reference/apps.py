@@ -10,7 +10,7 @@ class AppConfig(DjangoAppConfig):
     verbose_name = 'Edc Reference'
 
     def ready(self):
-        from .signals import edc_reference_post_delete
+        from .signals import reference_post_delete
         sys.stdout.write(f'Loading {self.verbose_name} ...\n')
 
         site_reference_configs.autodiscover()

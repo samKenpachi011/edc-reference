@@ -3,8 +3,8 @@ from django.dispatch import receiver
 
 
 @receiver(post_delete, weak=False, dispatch_uid="edc_reference_post_delete")
-def edc_reference_post_delete(instance, using, **kwargs):
+def reference_post_delete(instance, using, **kwargs):
     try:
-        instance.edc_reference_model_deleter_cls(model_obj=instance)
+        instance.reference_deleter_cls(model_obj=instance)
     except AttributeError:
         pass
