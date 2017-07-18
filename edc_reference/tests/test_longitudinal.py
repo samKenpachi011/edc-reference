@@ -3,7 +3,7 @@ from django.test import TestCase, tag
 
 from edc_base.utils import get_utcnow
 
-from ..refsets import LongitudinalRefSet
+from ..refsets import LongitudinalRefset, InvalidOrdering, NoRefsetObjectsExist
 from ..models import Reference
 from ..reference_model_config import ReferenceModelConfig
 from ..site import site_reference_configs
@@ -42,69 +42,86 @@ class TestLongitudinal(TestCase):
                 field_str=values[index][0],
                 field_datetime=values[index][1])
 
-    @tag('1')
-    def test_longitudinal_refs(self):
-        refset = LongitudinalRefSet(
+    def test_longitudinal_refset(self):
+        refset = LongitudinalRefset(
             subject_identifier=self.subject_identifier,
             visit_model='edc_reference.subjectvisit',
             model='edc_reference.crfone',
             reference_model_cls=Reference)
         self.assertEqual([ref.timepoint for ref in refset], ['3', '2', '1'])
 
-    @tag('1')
-    def test_longitudinal_ref_ordering(self):
-        refset = LongitudinalRefSet(
+    def test_no_refsets(self):
+        refset = LongitudinalRefset(
+            subject_identifier=self.subject_identifier,
+            visit_model='edc_reference.subjectvisit',
+            model='edc_reference.crfone',
+            reference_model_cls=Reference)
+        refset._refsets = []
+        self.assertRaises(
+            NoRefsetObjectsExist,
+            refset.fieldset, 'field_name')
+
+    def test_ordering(self):
+        refset = LongitudinalRefset(
             subject_identifier=self.subject_identifier,
             visit_model='edc_reference.subjectvisit',
             model='edc_reference.crfone',
             reference_model_cls=Reference).order_by('-report_datetime')
-        self.assertEqual([ref.timepoint for ref in refset], ['1', '2', '3'])
+        self.assertEqual(
+            [ref.timepoint for ref in refset], ['1', '2', '3'])
         refset.order_by()
         self.assertEqual([ref.timepoint for ref in refset], ['3', '2', '1'])
 
-    @tag('1')
+    def test_bad_ordering(self):
+        self.assertRaises(
+            InvalidOrdering,
+            LongitudinalRefset(
+                subject_identifier=self.subject_identifier,
+                visit_model='edc_reference.subjectvisit',
+                model='edc_reference.crfone',
+                reference_model_cls=Reference).order_by, 'blah')
+
     def test_get(self):
-        refset = LongitudinalRefSet(
+        refset = LongitudinalRefset(
             subject_identifier=self.subject_identifier,
             visit_model='edc_reference.subjectvisit',
             model='edc_reference.crfone',
             reference_model_cls=Reference)
         self.assertEqual(
-            refset.get_fieldset('field_str').field_str.all(), ['NEG', 'POS', 'POS'])
-        refset.order_by('-report_datetime')
+            refset.fieldset('field_str').all().values, ['NEG', 'POS', 'POS'])
         self.assertEqual(
-            refset.get_fieldset('field_str').field_str.all(), ['POS', 'POS', 'NEG'])
-
-    @tag('1')
-    def test_get2(self):
-        refset = LongitudinalRefSet(
-            subject_identifier=self.subject_identifier,
-            visit_model='edc_reference.subjectvisit',
-            model='edc_reference.crfone',
-            reference_model_cls=Reference).order_by('field_datetime')
-        self.assertEqual(
-            refset.get_fieldset('field_str').field_str.all(),
-            ['NEG', 'POS', 'POS'])
-        self.assertEqual(
-            refset.get_fieldset('field_str').order_by(
-                '-field_datetime').field_str.all(),
+            refset.fieldset('field_str').all().order_by(
+                '-report_datetime').values,
             ['POS', 'POS', 'NEG'])
 
-    @tag('1')
-    def test_get_last(self):
-        refset = LongitudinalRefSet(
+    def test_get2(self):
+        refset = LongitudinalRefset(
             subject_identifier=self.subject_identifier,
             visit_model='edc_reference.subjectvisit',
             model='edc_reference.crfone',
-            reference_model_cls=Reference).order_by('field_datetime')
-        self.assertEqual(refset.get_fieldset(
-            'field_str').field_str.last(), 'POS')
+            reference_model_cls=Reference)
         self.assertEqual(
-            refset.get_fieldset('field_str').order_by('-field_datetime').field_str.last(), 'NEG')
+            refset.fieldset('field_str').all().order_by(
+                'field_datetime').values,
+            ['NEG', 'POS', 'POS'])
+        self.assertEqual(
+            refset.fieldset('field_str').order_by(
+                '-field_datetime').all().values,
+            ['POS', 'POS', 'NEG'])
 
-    @tag('1')
+    def test_get_last(self):
+        refset = LongitudinalRefset(
+            subject_identifier=self.subject_identifier,
+            visit_model='edc_reference.subjectvisit',
+            model='edc_reference.crfone',
+            reference_model_cls=Reference)
+        self.assertEqual(refset.fieldset('field_str').order_by(
+            'field_datetime').last(), 'POS')
+        self.assertEqual(
+            refset.fieldset('field_str').order_by('-field_datetime').last(), 'NEG')
+
     def test_repr(self):
-        refset = LongitudinalRefSet(
+        refset = LongitudinalRefset(
             subject_identifier=self.subject_identifier,
             visit_model='edc_reference.subjectvisit',
             model='edc_reference.crfone',

@@ -144,7 +144,7 @@ class Site:
         try:
             self.register(reference)
         except AlreadyRegistered:
-            pass
+            self.reregister(reference)
 
     def add_fields_to_config(self, model=None, fields=None):
         reference_config = self.get_config(model)

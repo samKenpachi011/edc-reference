@@ -1,4 +1,4 @@
-from .refsets import LongitudinalRefSet, NoRefObjectsExist
+from .refsets import LongitudinalRefset, NoRefsetObjectsExist
 from .reference import ReferenceDeleter
 from .reference import ReferenceGetter
 from .reference import ReferenceUpdater

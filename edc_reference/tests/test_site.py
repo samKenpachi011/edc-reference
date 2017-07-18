@@ -5,7 +5,7 @@ from ..reference_model_config import ReferenceFieldValidationError, ReferenceDup
 from ..reference_model_config import ReferenceModelValidationError
 from ..site import site_reference_configs
 from ..site import AlreadyRegistered, SiteReferenceFieldsImportError
-from ..site import SiteReferenceFieldsError
+from ..site import SiteReferenceFieldsError, ReferenceConfigNotRegistered
 from .dummy import DummySite, DummyVisitSchedule, DummySchedule
 
 
@@ -106,6 +106,26 @@ class TestSite(TestCase):
             SiteReferenceFieldsError,
             site_reference_configs.get_reference_model, model)
 
+    def test_not_registered_for_reregister(self):
+        model = 'edc_reference.crfone'
+        fields = ['f1']
+        reference = ReferenceModelConfig(fields=fields, model=model)
+        site_reference_configs.registry = {}
+        self.assertRaises(
+            ReferenceConfigNotRegistered,
+            site_reference_configs.reregister, reference)
+
+    def test_get_config(self):
+        model = 'edc_reference.crfone'
+        fields = ['f1']
+        reference = ReferenceModelConfig(fields=fields, model=model)
+        site_reference_configs.register(reference)
+        self.assertEqual(
+            reference, site_reference_configs.get_config(model='edc_reference.crfone'))
+        self.assertRaises(
+            SiteReferenceFieldsError,
+            site_reference_configs.get_config, model=None)
+
     def test_register_reference_models_from_visit_schedule(self):
         site_visit_schedules = DummySite()
         visit_schedule = DummyVisitSchedule()
@@ -113,6 +133,21 @@ class TestSite(TestCase):
         visit_schedule.schedules.update(schedule=schedule)
         site_visit_schedules.registry.update(visit_schedule=visit_schedule)
         site_reference_configs.registry = {}
+        site_reference_configs.register_from_visit_schedule(
+            site_visit_schedules=site_visit_schedules)
+        self.assertTrue(
+            site_reference_configs.get_config(model='edc_reference.crfone'))
+
+    def test_reregister_reference_models_from_visit_schedule(self):
+        site_visit_schedules = DummySite()
+        visit_schedule = DummyVisitSchedule()
+        schedule = DummySchedule()
+        visit_schedule.schedules.update(schedule=schedule)
+        site_visit_schedules.registry.update(visit_schedule=visit_schedule)
+        site_reference_configs.registry = {}
+        site_reference_configs.register_from_visit_schedule(
+            site_visit_schedules=site_visit_schedules)
+        # do again
         site_reference_configs.register_from_visit_schedule(
             site_visit_schedules=site_visit_schedules)
         self.assertTrue(

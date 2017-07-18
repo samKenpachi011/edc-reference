@@ -5,7 +5,7 @@
 pivoted reference table for edc modules
 
 
-## Usage
+## Usage and Configuration
 
 Declare a model with the `ReferenceModelMixin`.
 
@@ -84,3 +84,6 @@ Model managers methods are also available, for example:
     'happiness'
      
  
+### Accessing pivoted data with `LongitudinalRefset`
+
+    

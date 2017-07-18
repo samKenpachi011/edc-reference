@@ -36,7 +36,6 @@ class TestReferenceModel(TestCase):
             subject_identifier=self.subject_identifier,
             visit_code='code')
 
-    @tag('2')
     def test_updater_repr(self):
         model_obj = TestModel.objects.create(
             subject_visit=self.subject_visit,

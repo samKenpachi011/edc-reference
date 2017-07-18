@@ -59,7 +59,7 @@ class Reference(BaseUuidModel):
     def value(self):
         for field_name in ['value_str', 'value_int', 'value_date', 'value_datetime']:
             value = getattr(self, field_name)
-            if value:
+            if value is not None:
                 break
         return value
 
