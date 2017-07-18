@@ -1,17 +1,17 @@
-from .reference_model_getter import ReferenceModelGetter
-from .site import site_reference_configs
+from ..site import site_reference_configs
+from .reference_getter import ReferenceGetter
 
 
 class ReferenceFieldNotFound(Exception):
     pass
 
 
-class ReferenceModelUpdater:
+class ReferenceUpdater:
     """Updates or creates each reference model instance; one for
     each field in `edc_reference_fields` for this model_obj.
     """
 
-    getter_cls = ReferenceModelGetter
+    getter_cls = ReferenceGetter
 
     def __init__(self, model_obj=None):
         edc_reference_fields = site_reference_configs.get_fields(

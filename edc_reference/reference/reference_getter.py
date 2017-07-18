@@ -1,9 +1,10 @@
 from django.apps import apps as django_apps
 from django.core.exceptions import ObjectDoesNotExist
-from edc_reference.site import site_reference_configs
+
+from ..site import site_reference_configs
 
 
-class ReferenceModelGetter:
+class ReferenceGetter:
     """A class that gets the reference model instance for a given
     model or attributes of the model.
 

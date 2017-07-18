@@ -8,9 +8,9 @@ from edc_base.utils import get_utcnow
 from ..models import Reference, ReferenceFieldDatatypeNotFound
 from ..reference_model_config import ReferenceModelConfig
 from ..reference_model_config import ReferenceDuplicateField, ReferenceFieldValidationError
-from ..reference_model_deleter import ReferenceModelDeleter
-from ..reference_model_getter import ReferenceModelGetter
-from ..reference_model_updater import ReferenceModelUpdater, ReferenceFieldNotFound
+from edc_reference.reference import ReferenceDeleter
+from edc_reference.reference import ReferenceGetter
+from edc_reference.reference import ReferenceUpdater, ReferenceFieldNotFound
 from ..site import site_reference_configs, SiteReferenceFieldsError
 from .models import CrfOne, SubjectVisit
 from .models import CrfWithUnknownDatatype, TestModel, SubjectRequisition
@@ -41,13 +41,13 @@ class TestReferenceModel(TestCase):
         model_obj = TestModel.objects.create(
             subject_visit=self.subject_visit,
             field_str='erik')
-        self.assertTrue(repr(ReferenceModelUpdater(model_obj=model_obj)))
+        self.assertTrue(repr(ReferenceUpdater(model_obj=model_obj)))
 
     def test_model_repr(self):
         model_obj = TestModel.objects.create(
             subject_visit=self.subject_visit,
             field_str='erik')
-        ReferenceModelUpdater(model_obj=model_obj)
+        ReferenceUpdater(model_obj=model_obj)
         reference = Reference.objects.get(
             identifier=self.subject_identifier,
             timepoint=self.subject_visit.visit_code,
@@ -58,7 +58,7 @@ class TestReferenceModel(TestCase):
         model_obj = TestModel.objects.create(
             subject_visit=self.subject_visit,
             field_str='erik')
-        ReferenceModelUpdater(model_obj=model_obj)
+        ReferenceUpdater(model_obj=model_obj)
         reference = Reference.objects.get(
             identifier=self.subject_identifier,
             timepoint=self.subject_visit.visit_code,
@@ -69,9 +69,9 @@ class TestReferenceModel(TestCase):
         model_obj = TestModel.objects.create(
             subject_visit=self.subject_visit,
             field_str='erik')
-        ReferenceModelUpdater(model_obj=model_obj)
+        ReferenceUpdater(model_obj=model_obj)
         model_obj.field_str = 'bob'
-        ReferenceModelUpdater(model_obj=model_obj)
+        ReferenceUpdater(model_obj=model_obj)
         reference = Reference.objects.get(
             identifier=self.subject_identifier,
             timepoint=self.subject_visit.visit_code,
@@ -88,15 +88,15 @@ class TestReferenceModel(TestCase):
             field_str='erik')
         self.assertRaises(
             ReferenceFieldNotFound,
-            ReferenceModelUpdater, model_obj=model_obj)
+            ReferenceUpdater, model_obj=model_obj)
 
     def test_deleter(self):
         model_obj = TestModel.objects.create(
             subject_visit=self.subject_visit,
             field_str='erik')
-        ReferenceModelUpdater(model_obj=model_obj)
+        ReferenceUpdater(model_obj=model_obj)
         model_obj.delete()
-        ReferenceModelDeleter(model_obj=model_obj)
+        ReferenceDeleter(model_obj=model_obj)
         try:
             reference = Reference.objects.get(
                 identifier=self.subject_identifier,
@@ -268,7 +268,7 @@ class TestReferenceModel(TestCase):
         crf_one = CrfOne.objects.create(
             subject_visit=self.subject_visit,
             field_int=100)
-        reference = ReferenceModelGetter(
+        reference = ReferenceGetter(
             field_name='field_int',
             model_obj=crf_one)
         self.assertTrue(repr(reference))
@@ -278,7 +278,7 @@ class TestReferenceModel(TestCase):
         crf_one = CrfOne.objects.create(
             subject_visit=self.subject_visit,
             field_int=integer)
-        reference = ReferenceModelGetter(
+        reference = ReferenceGetter(
             field_name='field_int',
             model_obj=crf_one)
         self.assertEqual(reference.field_int, integer)
@@ -286,7 +286,7 @@ class TestReferenceModel(TestCase):
     def test_reference_getter_sets_attr_even_if_none(self):
         crf_one = CrfOne.objects.create(
             subject_visit=self.subject_visit)
-        reference = ReferenceModelGetter(
+        reference = ReferenceGetter(
             field_name='field_int',
             model_obj=crf_one)
         self.assertEqual(reference.field_int, None)
@@ -313,7 +313,7 @@ class TestReferenceModel(TestCase):
         crf_one = CrfOne.objects.create(
             subject_visit=self.subject_visit,
             field_int=integer)
-        reference = ReferenceModelGetter(
+        reference = ReferenceGetter(
             field_name='field_int',
             model='edc_reference.crfone',
             visit_obj=crf_one.visit)
@@ -324,7 +324,7 @@ class TestReferenceModel(TestCase):
         crf_one = CrfOne.objects.create(
             subject_visit=self.subject_visit,
             field_int=integer)
-        reference = ReferenceModelGetter(
+        reference = ReferenceGetter(
             field_name='field_int',
             model='edc_reference.crfone',
             subject_identifier=self.subject_identifier,
@@ -337,7 +337,7 @@ class TestReferenceModel(TestCase):
         crf_one = CrfOne.objects.create(
             subject_visit=self.subject_visit,
             field_int=integer)
-        reference = ReferenceModelGetter(
+        reference = ReferenceGetter(
             field_name='blah',
             model='edc_reference.crfone',
             model_obj=crf_one.visit)
