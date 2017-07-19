@@ -60,11 +60,13 @@ class Fieldset:
 
     def first(self, value=None):
         """Returns the first value from the list of values.
+
+        Excludes None.
         """
         if value:
             values = [v for v in self._values if v == value]
         else:
-            values = self._values
+            values = [v for v in self._values if v is not None]
         try:
             return values[0]
         except IndexError:
@@ -72,11 +74,14 @@ class Fieldset:
 
     def last(self, value=None):
         """Returns the last value from the list of values.
+
+        Excludes None.
         """
         if value:
             values = [v for v in self.values if v == value][-1:]
         else:
-            values = self.values[-1:]
+            values = [v for v in self._values if v is not None][-1:]
+            # values = self.values[-1:]
         try:
             return values[0]
         except IndexError:

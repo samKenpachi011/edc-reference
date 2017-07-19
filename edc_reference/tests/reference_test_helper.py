@@ -11,6 +11,12 @@ class ReferenceTestHelperError(Exception):
 
 class ReferenceTestHelper:
 
+    field_types = {
+        'CharField': (str),
+        'DateTimeField': (datetime),
+        'DateField': (date),
+        'IntegerField': (int)}
+
     def __init__(self, visit_model=None, subject_identifier=None):
         self.subject_identifier = subject_identifier
         self.app_label = visit_model.split('.')[0]
@@ -38,20 +44,21 @@ class ReferenceTestHelper:
             if field_name != 'report_datetime':
                 try:
                     value, internal_type = options.get(field_name)
+                    if internal_type not in self.field_types:
+                        raise TypeError(
+                            f'Invalid internal type. Got \'{internal_type}\'')
                 except (TypeError, ValueError) as e:
                     value = options.get(field_name)
                     internal_type = None
                     if value:
-                        if isinstance(value, str):
-                            internal_type = 'CharField'
-                        elif isinstance(value, (datetime)):
-                            internal_type = 'DateTimeField'
-                        elif isinstance(value, (date)):
-                            internal_type = 'DateField'
+                        for field_type, datatypes in self.field_types.items():
+                            if isinstance(value, datatypes):
+                                internal_type = field_type
+                                break
                         if not internal_type:
                             raise TypeError(
                                 f'{e}. Got field_name={field_name}, value={value}')
-                if value and internal_type:
+                if value:
                     reference.update_value(
                         value=value, internal_type=internal_type)
         return self.reference_model_cls.objects.filter(

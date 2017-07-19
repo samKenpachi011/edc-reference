@@ -53,8 +53,10 @@ class Reference(BaseUuidModel):
             setattr(self, *update),
         else:
             raise ReferenceFieldDatatypeNotFound(
-                f'Reference field datatype not found. Got {self.model}.{self.field_name} '
-                f'type={internal_type}, value={value}.')
+                f'Reference field internal_type not found. Got \'{internal_type}\'. '
+                f'model={self.model}.{self.field_name} '
+                f'Expected a django.models.field internal type like \'CharField\', '
+                '\'DateTimeField\', etc.')
         self.save()
 
     @property

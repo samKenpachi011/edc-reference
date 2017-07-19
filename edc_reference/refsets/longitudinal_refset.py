@@ -3,7 +3,6 @@ from django.apps import apps as django_apps
 
 from .fieldset import Fieldset
 from .refset import Refset
-from pprint import pprint
 
 
 class LongitudinalRefsetError(Exception):
@@ -27,6 +26,7 @@ class LongitudinalRefset:
 
     def __init__(self, subject_identifier=None, visit_model=None, model=None,
                  reference_model_cls=None, **options):
+        self.model = model
         self.ordering = None
         self.subject_identifier = subject_identifier
         try:
@@ -41,7 +41,8 @@ class LongitudinalRefset:
         try:
             self.visit_references = reference_model_cls.objects.filter(**opts)
         except ValueError as e:
-            raise LongitudinalRefsetError(f'{e}. model={model}. Got {opts}.')
+            raise LongitudinalRefsetError(
+                f'{e}. model={self.model}. Got {opts}.')
         self._refsets = []
         for visit_reference in self.visit_references:
             self._refsets.append(
@@ -49,7 +50,7 @@ class LongitudinalRefset:
                     subject_identifier=subject_identifier,
                     report_datetime=visit_reference.report_datetime,
                     timepoint=visit_reference.timepoint,
-                    model=model,
+                    model=self.model,
                     reference_model_cls=reference_model_cls))
         self.ordering_attrs = copy(self.refset_cls.ordering_attrs)
         for refset in self._refsets:
@@ -79,8 +80,20 @@ class LongitudinalRefset:
         if field.startswith('-'):
             field = field[1:]
             reverse = True
-        self._refsets.sort(
-            key=lambda x: getattr(x, field) or 0, reverse=reverse)
+        try:
+            self._refsets.sort(
+                key=lambda x: getattr(x, field), reverse=reverse)
+        except TypeError as e:
+            null_refsets = [
+                x for x in self._refsets if getattr(x, field) is None]
+            notnull_refsets = [
+                x for x in self._refsets if getattr(x, field) is not None]
+            notnull_refsets.sort(
+                key=lambda x: getattr(x, field), reverse=reverse)
+            self._refsets = notnull_refsets + null_refsets
+#             raise LongitudinalRefsetError(
+# f'Unorderable sequence from RefSet field. {seq}.
+# field={self.model}.{field}')
         return self
 
     def fieldset(self, field_name=None):
