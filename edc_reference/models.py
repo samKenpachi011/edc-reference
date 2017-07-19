@@ -3,6 +3,7 @@ from django.db import models
 from edc_base.model_mixins import BaseUuidModel
 
 from .managers import ReferenceManager
+from pprint import pprint
 
 
 class ReferenceFieldDatatypeNotFound(Exception):
@@ -37,22 +38,23 @@ class Reference(BaseUuidModel):
         return (f'{self.identifier}@{self.timepoint} {self.model}.'
                 f'{self.field_name}={self.value}')
 
-    def update_value(self, value=None, field=None, internal_type=None):
+    def update_value(self, value=None, internal_type=None, field=None):
         """Updates the correct `value` field based on the
         field class datatype.
         """
-        self.datatype = internal_type or field.get_internal_type()
+        internal_type = internal_type or field.get_internal_type()
         update = None
         for fld in self._meta.get_fields():
-            if fld.name.startswith('value'):
-                if fld.get_internal_type() == self.datatype:
+            if fld.name.startswith('value'):  # e.g. value_str, value_int, etc
+                if fld.get_internal_type() == internal_type:
                     update = (fld.name, value)
                     break
         if update:
             setattr(self, *update),
         else:
             raise ReferenceFieldDatatypeNotFound(
-                f'Reference field datatype not found. Got {self.model}.{field.name}.')
+                f'Reference field datatype not found. Got {self.model}.{self.field_name} '
+                f'type={internal_type}, value={value}.')
         self.save()
 
     @property

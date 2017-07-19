@@ -14,11 +14,11 @@ class ReferenceUpdater:
     getter_cls = ReferenceGetter
 
     def __init__(self, model_obj=None):
-        edc_reference_fields = site_reference_configs.get_fields(
+        reference_fields = site_reference_configs.get_fields(
             model=model_obj._meta.label_lower)
         # loop through fields and update or create each
         # reference model instance
-        for field_name in edc_reference_fields:
+        for field_name in reference_fields:
             try:
                 field_obj = [fld for fld in model_obj._meta.get_fields()
                              if fld.name == field_name][0]

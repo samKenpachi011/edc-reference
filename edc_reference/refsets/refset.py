@@ -77,6 +77,10 @@ class Refset:
             self._fields.update(report_datetime=self.report_datetime)
             self._fields.update(visit_code=self.timepoint)
 
+    @property
+    def visit_code(self):
+        return self.timepoint
+
     def __repr__(self):
         return (f'{self.__class__.__name__}(model={self.model},'
                 f'subject_identifier={self.subject_identifier},'

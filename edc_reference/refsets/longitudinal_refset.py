@@ -3,6 +3,7 @@ from django.apps import apps as django_apps
 
 from .fieldset import Fieldset
 from .refset import Refset
+from pprint import pprint
 
 
 class LongitudinalRefsetError(Exception):
@@ -32,11 +33,15 @@ class LongitudinalRefset:
             reference_model_cls = django_apps.get_model(reference_model_cls)
         except AttributeError:
             pass
-        self.visit_references = reference_model_cls.objects.filter(
+        opts = dict(
             identifier=self.subject_identifier,
             model=visit_model,
             field_name='report_datetime',
             **options)
+        try:
+            self.visit_references = reference_model_cls.objects.filter(**opts)
+        except ValueError as e:
+            raise LongitudinalRefsetError(f'{e}. model={model}. Got {opts}.')
         self._refsets = []
         for visit_reference in self.visit_references:
             self._refsets.append(
@@ -57,6 +62,9 @@ class LongitudinalRefset:
 
     def __iter__(self):
         return iter(self._refsets)
+
+    def __getitem__(self, i):
+        return self._refsets[i]
 
     def order_by(self, field=None):
         """Re-order the collection ref objects by a single field.
