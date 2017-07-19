@@ -1,6 +1,8 @@
 from django.apps import apps as django_apps
 
 from ..site import site_reference_configs
+from datetime import date, datetime
+from pprint import pprint
 
 
 class ReferenceTestHelperError(Exception):
@@ -22,7 +24,10 @@ class ReferenceTestHelper:
         return self.reference_model_cls.objects.filter(**kwargs)
 
     def create_for_model(self, model=None, report_datetime=None, visit_code=None, **options):
-        model = f'{self.app_label}.{model}'
+        try:
+            model.split('.')[1]
+        except IndexError:
+            model = f'{self.app_label}.{model}'
         for field_name in site_reference_configs.get_fields(model):
             reference = self.reference_model_cls.objects.create(
                 model=model,
@@ -30,13 +35,25 @@ class ReferenceTestHelper:
                 report_datetime=report_datetime,
                 timepoint=visit_code,
                 field_name=field_name)
-            try:
-                value, internal_type = options.get(field_name)
-            except TypeError:
-                pass
-            else:
-                reference.update_value(
-                    value=value, internal_type=internal_type)
+            if field_name != 'report_datetime':
+                try:
+                    value, internal_type = options.get(field_name)
+                except (TypeError, ValueError) as e:
+                    value = options.get(field_name)
+                    internal_type = None
+                    if value:
+                        if isinstance(value, str):
+                            internal_type = 'CharField'
+                        elif isinstance(value, (datetime)):
+                            internal_type = 'DateTimeField'
+                        elif isinstance(value, (date)):
+                            internal_type = 'DateField'
+                        if not internal_type:
+                            raise TypeError(
+                                f'{e}. Got field_name={field_name}, value={value}')
+                if value and internal_type:
+                    reference.update_value(
+                        value=value, internal_type=internal_type)
         return self.reference_model_cls.objects.filter(
             model=model, identifier=self.subject_identifier,
             report_datetime=report_datetime)

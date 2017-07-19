@@ -129,3 +129,13 @@ class TestLongitudinal(TestCase):
         self.assertTrue(repr(refset))
         for ref in refset:
             self.assertTrue(repr(ref))
+
+    def test_with_model_name(self):
+        refset = LongitudinalRefset(
+            subject_identifier=self.subject_identifier,
+            visit_model='edc_reference.subjectvisit',
+            model='edc_reference.crfone',
+            reference_model_cls='edc_reference.reference')
+        self.assertTrue(repr(refset))
+        for ref in refset:
+            self.assertTrue(repr(ref))

@@ -4,8 +4,8 @@ from ..reference_model_config import ReferenceModelConfig
 from ..reference_model_config import ReferenceFieldValidationError, ReferenceDuplicateField
 from ..reference_model_config import ReferenceModelValidationError
 from ..site import site_reference_configs
-from ..site import AlreadyRegistered, SiteReferenceFieldsImportError
-from ..site import SiteReferenceFieldsError, ReferenceConfigNotRegistered
+from ..site import AlreadyRegistered, SiteReferenceConfigImportError
+from ..site import SiteReferenceConfigError, ReferenceConfigNotRegistered
 from .dummy import DummySite, DummyVisitSchedule, DummySchedule
 
 
@@ -44,7 +44,7 @@ class TestSite(TestCase):
 
     def test_autodiscover_bad(self):
         self.assertRaises(
-            SiteReferenceFieldsImportError,
+            SiteReferenceConfigImportError,
             site_reference_configs.autodiscover, 'tests.reference_fields_bad')
 
     def test_validate_ok(self):
@@ -96,14 +96,14 @@ class TestSite(TestCase):
         model = 'edc_reference.crfone'
         site_reference_configs.registry = {}
         self.assertRaises(
-            SiteReferenceFieldsError,
+            SiteReferenceConfigError,
             site_reference_configs.get_fields, model)
 
     def test_not_registered_for_reference_model(self):
         model = 'edc_reference.crfone'
         site_reference_configs.registry = {}
         self.assertRaises(
-            SiteReferenceFieldsError,
+            SiteReferenceConfigError,
             site_reference_configs.get_reference_model, model)
 
     def test_not_registered_for_reregister(self):
@@ -123,7 +123,7 @@ class TestSite(TestCase):
         self.assertEqual(
             reference, site_reference_configs.get_config(model='edc_reference.crfone'))
         self.assertRaises(
-            SiteReferenceFieldsError,
+            SiteReferenceConfigError,
             site_reference_configs.get_config, model=None)
 
     def test_register_reference_models_from_visit_schedule(self):

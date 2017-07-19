@@ -11,7 +11,7 @@ from ..reference_model_config import ReferenceDuplicateField, ReferenceFieldVali
 from edc_reference.reference import ReferenceDeleter
 from edc_reference.reference import ReferenceGetter
 from edc_reference.reference import ReferenceUpdater, ReferenceFieldNotFound
-from ..site import site_reference_configs, SiteReferenceFieldsError
+from ..site import site_reference_configs, SiteReferenceConfigError
 from .models import CrfOne, SubjectVisit
 from .models import CrfWithUnknownDatatype, TestModel, SubjectRequisition
 
@@ -240,7 +240,7 @@ class TestReferenceModel(TestCase):
             fields=['blah1', 'blah2', 'blah3', 'blah4'])
         site_reference_configs.register(reference_config)
         self.assertRaises(
-            SiteReferenceFieldsError,
+            SiteReferenceConfigError,
             site_reference_configs.validate)
 
     def test_raises_on_missing_model_mixin(self):
@@ -249,7 +249,7 @@ class TestReferenceModel(TestCase):
             fields=['report_datetime'])
         site_reference_configs.reregister(reference_config)
         self.assertRaises(
-            SiteReferenceFieldsError,
+            SiteReferenceConfigError,
             site_reference_configs.validate)
 
     def test_model_raises_on_unknown_field_datatype(self):

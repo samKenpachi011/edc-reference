@@ -22,11 +22,11 @@ class RegistryNotLoaded(Exception):
     pass
 
 
-class SiteReferenceFieldsImportError(Exception):
+class SiteReferenceConfigImportError(Exception):
     pass
 
 
-class SiteReferenceFieldsError(Exception):
+class SiteReferenceConfigError(Exception):
     pass
 
 
@@ -58,7 +58,7 @@ class Site:
         except AttributeError:
             reference_config = None
         if not reference_config:
-            raise SiteReferenceFieldsError(
+            raise SiteReferenceConfigError(
                 f'Model not registered. Got {model}')
         return reference_config
 
@@ -88,7 +88,7 @@ class Site:
                     ReferenceFieldValidationError) as e:
                 sys.stdout.write(
                     f' ( ) {model}. {style.ERROR("ERROR!!")}    \n')
-                raise SiteReferenceFieldsError(e) from e
+                raise SiteReferenceConfigError(e) from e
             else:
                 sys.stdout.write(f' (*) {model}. {style.SUCCESS("OK")}    \n')
         sys.stdout.write('Done.\n')
@@ -112,7 +112,7 @@ class Site:
                     if f'No module named \'{app}.{module_name}\'' not in str(e):
                         site_reference_configs.registry = before_import_registry
                         if module_has_submodule(mod, module_name):
-                            raise SiteReferenceFieldsImportError(e) from e
+                            raise SiteReferenceConfigImportError(e) from e
             except ImportError:
                 pass
 

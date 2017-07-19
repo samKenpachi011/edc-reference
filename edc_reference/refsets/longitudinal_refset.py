@@ -1,3 +1,6 @@
+from copy import copy
+from django.apps import apps as django_apps
+
 from .fieldset import Fieldset
 from .refset import Refset
 
@@ -25,6 +28,10 @@ class LongitudinalRefset:
                  reference_model_cls=None, **options):
         self.ordering = None
         self.subject_identifier = subject_identifier
+        try:
+            reference_model_cls = django_apps.get_model(reference_model_cls)
+        except AttributeError:
+            pass
         self.visit_references = reference_model_cls.objects.filter(
             identifier=self.subject_identifier,
             model=visit_model,
@@ -32,12 +39,17 @@ class LongitudinalRefset:
             **options)
         self._refsets = []
         for visit_reference in self.visit_references:
-            self._refsets.append(self.refset_cls(
-                subject_identifier=subject_identifier,
-                report_datetime=visit_reference.report_datetime,
-                timepoint=visit_reference.timepoint,
-                model=model,
-                reference_model_cls=reference_model_cls))
+            self._refsets.append(
+                self.refset_cls(
+                    subject_identifier=subject_identifier,
+                    report_datetime=visit_reference.report_datetime,
+                    timepoint=visit_reference.timepoint,
+                    model=model,
+                    reference_model_cls=reference_model_cls))
+        self.ordering_attrs = copy(self.refset_cls.ordering_attrs)
+        for refset in self._refsets:
+            self.ordering_attrs.extend(list(refset._fields))
+        self.ordering_attrs = list(set(self.ordering_attrs))
         self.order_by('report_datetime')
 
     def __repr__(self):
@@ -49,10 +61,10 @@ class LongitudinalRefset:
     def order_by(self, field=None):
         """Re-order the collection ref objects by a single field.
         """
-        if field and field.replace('-', '') not in self.refset_cls.ordering_attrs:
+        if field and field.replace('-', '') not in self.ordering_attrs:
             raise InvalidOrdering(
                 f'Invalid ordering field. field={field}. Expected one of '
-                f'{self.refset_cls.ordering_attrs}')
+                f'{self.ordering_attrs}')
         field = field or 'report_datetime'
         self.ordering = field
         reverse = False

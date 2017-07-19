@@ -129,6 +129,9 @@ class TestRefset(TestCase):
         for field, value in refset._fields.items():
             if field == 'report_datetime':
                 self.assertEqual(value, self.subject_visits[0].report_datetime)
+            elif field == 'visit_code':
+                self.assertEqual(
+                    value, self.subject_visits[0].visit_code, msg=field)
 
     def test_if_reference_updates_fields(self):
         for index, subject_visit in enumerate(self.subject_visits):
@@ -144,6 +147,9 @@ class TestRefset(TestCase):
                     if field == 'report_datetime':
                         self.assertEqual(
                             value, subject_visit.report_datetime, msg=field)
+                    elif field == 'visit_code':
+                        self.assertEqual(
+                            value, subject_visit.visit_code, msg=field)
                     else:
                         self.assertEqual(value, getattr(
                             crf_one, field), msg=field)
@@ -151,6 +157,12 @@ class TestRefset(TestCase):
     def test_raises_on_overlapping_field(self):
         site_reference_configs.add_fields_to_config(
             'edc_reference.crfone', ['subject_identifier'])
+        Reference.objects.create(
+            model='edc_reference.crfone',
+            identifier=self.subject_identifier,
+            report_datetime=self.subject_visits[0].report_datetime,
+            timepoint=self.subject_visits[0].visit_code,
+            field_name='subject_identifier')
         self.assertRaises(
             RefsetOverlappingField,
             Refset,

@@ -1,6 +1,6 @@
+from edc_reference.site import SiteReferenceConfigError
+
 from ..site import site_reference_configs
-from edc_reference.site import SiteReferenceFieldsError
-from pprint import pprint
 
 
 class RefsetError(Exception):
@@ -36,28 +36,32 @@ class Refset:
         opts = dict(
             identifier=self.subject_identifier,
             report_datetime=self.report_datetime,
-            timepoint=timepoint)
+            timepoint=timepoint,
+            model=model)
         try:
             self._fields = dict.fromkeys(
                 site_reference_configs.get_fields(self.model))
-        except SiteReferenceFieldsError as e:
+        except SiteReferenceConfigError as e:
             raise RefsetError(f'{e}. See {repr(self)}')
         try:
             self._fields.pop('report_datetime')
         except KeyError:
             pass
-        self.ordering_attrs.extend(list(self._fields))
         try:
             references = reference_model_cls.objects.filter(**opts)
         except AttributeError as e:
             raise RefsetError(e)
-        if references:
-            self._fields.update(report_datetime=self.report_datetime)
+        if references.count() == 0:
+            self._fields.update(report_datetime=None)
+            for field_name in self._fields:
+                self._fields.update({field_name: None})
+                setattr(self, field_name, None)
+        else:
             for field_name in self._fields:
                 try:
                     obj = references.get(field_name=field_name)
                 except reference_model_cls.DoesNotExist as e:
-                    pass
+                    self._fields.update({field_name: None})
                 else:
                     self._fields.update({field_name: obj.value})
             for key, value in self._fields.items():
@@ -66,12 +70,12 @@ class Refset:
                 except AttributeError:
                     setattr(self, key, value)
                 else:
-                    if existing_value == value:
-                        setattr(self, key, value)
-                    else:
+                    if existing_value != value:
                         raise RefsetOverlappingField(
                             f'Attribute {key} already exists with a different value. '
                             f'Got {existing_value} == {value}. See {self.model}')
+            self._fields.update(report_datetime=self.report_datetime)
+            self._fields.update(visit_code=self.timepoint)
 
     def __repr__(self):
         return (f'{self.__class__.__name__}(model={self.model},'
