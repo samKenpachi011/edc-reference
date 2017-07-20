@@ -137,7 +137,7 @@ class Site:
                     for requisition in visit.requisitions:
                         reference = ReferenceModelConfig(
                             model=requisition.model,
-                            fields=['panel_name'])
+                            fields=['panel_name', 'is_drawn', 'reason_not_drawn'])
                         self._register_if_new(reference)
 
     def _register_if_new(self, reference):

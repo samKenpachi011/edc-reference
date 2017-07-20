@@ -8,9 +8,8 @@ from edc_base.utils import get_utcnow
 from ..models import Reference, ReferenceFieldDatatypeNotFound
 from ..reference_model_config import ReferenceModelConfig
 from ..reference_model_config import ReferenceDuplicateField, ReferenceFieldValidationError
-from edc_reference.reference import ReferenceDeleter
-from edc_reference.reference import ReferenceGetter
-from edc_reference.reference import ReferenceUpdater, ReferenceFieldNotFound
+from ..reference import ReferenceDeleter, ReferenceGetter
+from ..reference import ReferenceUpdater, ReferenceFieldNotFound
 from ..site import site_reference_configs, SiteReferenceConfigError
 from .models import CrfOne, SubjectVisit
 from .models import CrfWithUnknownDatatype, TestModel, SubjectRequisition

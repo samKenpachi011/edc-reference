@@ -2,7 +2,8 @@ from django.apps import apps as django_apps
 
 from ..site import site_reference_configs
 from datetime import date, datetime
-from pprint import pprint
+from django.core.exceptions import ObjectDoesNotExist
+from collections import namedtuple
 
 
 class ReferenceTestHelperError(Exception):
@@ -65,14 +66,36 @@ class ReferenceTestHelper:
             model=model, identifier=self.subject_identifier,
             report_datetime=report_datetime)
 
-    def update_for_model(self, model=None, report_datetime=None, valueset=None):
+    def update_for_model(self, model=None, report_datetime=None, visit_code=None,
+                         valueset=None):
         for field_name, internal_type, value in valueset:
-            reference = self.reference_model_cls.objects.create(
-                model=f'{self.app_label}.{model}',
-                identifier=self.subject_identifier,
-                report_datetime=report_datetime,
-                field_name=field_name)
+            try:
+                reference = self.reference_model_cls.objects.get(
+                    model=f'{self.app_label}.{model}',
+                    identifier=self.subject_identifier,
+                    report_datetime=report_datetime,
+                    timepoint=visit_code,
+                    field_name=field_name)
+            except ObjectDoesNotExist:
+                reference = self.reference_model_cls.objects.create(
+                    model=f'{self.app_label}.{model}',
+                    identifier=self.subject_identifier,
+                    report_datetime=report_datetime,
+                    timepoint=visit_code,
+                    field_name=field_name)
             reference.update_value(value=value, internal_type=internal_type)
+
+#     def update_for_model(self, value=None, model=None, report_datetime=None,
+#                          field_name=None, internal_type=None):
+#         reference = self.reference_model_cls.objects.get(
+#             model=model,
+#             identifier=self.subject_identifier,
+#             report_datetime=report_datetime,
+#             field_name=field_name)
+#         if internal_type not in self.field_types:
+#             raise TypeError(
+#                 f'Invalid internal type. Got \'{internal_type}\'')
+#         reference.update_value(value=value, internal_type=internal_type)
 
     def create_visit(self, report_datetime=None, timepoint=None):
         reference = self.reference_model_cls.objects.create(

@@ -9,7 +9,6 @@ class TestModel(TestCase):
     reference_model_cls = Reference
     subject_identifier = '11111'
 
-    @tag('4')
     def test_model_update(self):
         reference = self.reference_model_cls.objects.create(
             model=f'edc_reference.testmodel',
