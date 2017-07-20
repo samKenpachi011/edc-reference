@@ -1,6 +1,7 @@
 from edc_reference.site import SiteReferenceConfigError
 
 from ..site import site_reference_configs
+from django.core.exceptions import ObjectDoesNotExist
 
 
 class RefsetError(Exception):
@@ -51,6 +52,9 @@ class Refset:
             references = reference_model_cls.objects.filter(**opts)
         except AttributeError as e:
             raise RefsetError(e)
+        self._update_fields(references=references)
+
+    def _update_fields(self, references=None):
         if references.count() == 0:
             self._fields.update(report_datetime=None)
             for field_name in self._fields:
@@ -60,7 +64,7 @@ class Refset:
             for field_name in self._fields:
                 try:
                     obj = references.get(field_name=field_name)
-                except reference_model_cls.DoesNotExist as e:
+                except ObjectDoesNotExist:
                     self._fields.update({field_name: None})
                 else:
                     self._fields.update({field_name: obj.value})
