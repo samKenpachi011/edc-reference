@@ -38,8 +38,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_crypto_fields.apps.AppConfig',
+    'rest_framework',
+    'rest_framework.authtoken',
     'edc_device.apps.AppConfig',
     'edc_reference.apps.AppConfig',
+    'edc_sync.apps.AppConfig',
 ]
 
 MIDDLEWARE = [
@@ -121,7 +125,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
-
+GIT_DIR = BASE_DIR
+KEY_PATH = os.path.join(BASE_DIR, 'crypto_fields')
 
 if 'test' in sys.argv:
 
@@ -133,5 +138,5 @@ if 'test' in sys.argv:
             return None
 
     MIGRATION_MODULES = DisableMigrations()
-    PASSWORD_HASHERS = ('django.contrib.auth.hashers.MD5PasswordHasher', )
+    PASSWORD_HASHERS = ('django.contrib.auth.hashers.MD5PasswordHasher',)
     DEFAULT_FILE_STORAGE = 'inmemorystorage.InMemoryStorage'
