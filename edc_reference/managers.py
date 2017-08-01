@@ -5,6 +5,15 @@ from django.core.exceptions import ObjectDoesNotExist
 
 class ReferenceManager(models.Manager):
 
+    def get_by_natural_key(self, identifier, timepoint, report_datetime,
+                           model, field_name):
+        return self.get(
+            identifier=identifier,
+            timepoint=timepoint,
+            report_datetime=report_datetime,
+            model=model,
+            field_name=field_name)
+
     def filter_crf_for_visit(self, model=None, visit=None):
         """Returns a queryset of reference model instances
         for this model on this visit.
@@ -45,12 +54,3 @@ class ReferenceManager(models.Manager):
         except ObjectDoesNotExist:
             model_obj = None
         return model_obj
-
-    def get_by_natural_key(self, identifier, timepoint, report_datetime,
-                           model, field_name):
-        return self.get(
-            identifier=identifier,
-            timepoint=timepoint,
-            report_datetime=report_datetime,
-            model=field_name
-        )

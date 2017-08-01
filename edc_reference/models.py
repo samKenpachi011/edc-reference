@@ -3,7 +3,6 @@ from django.db import models
 from edc_base.model_mixins import BaseUuidModel
 
 from .managers import ReferenceManager
-from pprint import pprint
 
 
 class ReferenceFieldDatatypeNotFound(Exception):
@@ -38,6 +37,10 @@ class Reference(BaseUuidModel):
         return (f'{self.identifier}@{self.timepoint} {self.model}.'
                 f'{self.field_name}={self.value}')
 
+    def natural_key(self):
+        return (self.identifier, self.timepoint, self.report_datetime,
+                self.model, self.field_name)
+
     def update_value(self, value=None, internal_type=None, field=None):
         """Updates the correct `value` field based on the
         field class datatype.
@@ -66,11 +69,6 @@ class Reference(BaseUuidModel):
             if value is not None:
                 break
         return value
-
-    def natural_key(self):
-        return (
-            self.identifier, self.timepoint, self.report_datetime, self.model,
-            self.field_name)
 
     class Meta:
         unique_together = ['identifier', 'timepoint',

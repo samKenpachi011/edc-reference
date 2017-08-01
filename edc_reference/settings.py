@@ -38,12 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django_crypto_fields.apps.AppConfig',
-    'rest_framework',
-    'rest_framework.authtoken',
     'edc_device.apps.AppConfig',
     'edc_reference.apps.AppConfig',
-    'edc_sync.apps.AppConfig',
 ]
 
 MIDDLEWARE = [
