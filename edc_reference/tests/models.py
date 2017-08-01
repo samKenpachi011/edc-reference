@@ -17,7 +17,7 @@ class CrfModelMixin(models.Model):
         abstract = True
 
 
-class SubjectVisit(BaseUuidModel):
+class SubjectVisit(ReferenceModelMixin, BaseUuidModel):
 
     subject_identifier = models.CharField(max_length=50)
 

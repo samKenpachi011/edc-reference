@@ -7,9 +7,14 @@ from django.core.management.color import color_style
 
 from .reference_model_config import ReferenceDuplicateField, ReferenceModelValidationError
 from .reference_model_config import ReferenceFieldValidationError
+from .reference_model_config import ReferenceModelConfig
 
 
 class AlreadyRegistered(Exception):
+    pass
+
+
+class ReferenceConfigNotRegistered(Exception):
     pass
 
 
@@ -17,11 +22,11 @@ class RegistryNotLoaded(Exception):
     pass
 
 
-class SiteReferenceFieldsImportError(Exception):
+class SiteReferenceConfigImportError(Exception):
     pass
 
 
-class SiteReferenceFieldsError(Exception):
+class SiteReferenceConfigError(Exception):
     pass
 
 
@@ -32,26 +37,42 @@ class Site:
         self.loaded = False
 
     def register(self, reference=None):
-        if reference.model in self.registry:
+        model = reference.model.lower()
+        if model in self.registry:
             raise AlreadyRegistered(
                 f'Reference fields have already been registered. '
                 f'Got {reference.model}')
-        self.registry.update({reference.model: reference})
+        self.registry.update({model: reference})
         self.loaded = True
 
-    def get_fields(self, model=None):
+    def reregister(self, reference=None):
+        if reference.model not in self.registry:
+            raise ReferenceConfigNotRegistered(
+                f'Reference model configuration has not been registered. '
+                f'Got {reference.model}')
+        self.registry.update({reference.model: reference})
+
+    def get_config(self, model=None):
         try:
-            return self.registry.get(model).field_names
+            reference_config = self.registry.get(model.lower())
         except AttributeError:
-            raise SiteReferenceFieldsError(
+            reference_config = None
+        if not reference_config:
+            raise SiteReferenceConfigError(
                 f'Model not registered. Got {model}')
+        return reference_config
+
+    def get_fields(self, model=None):
+        """Returns a list of fields associated with the
+        reference configuration of "model".
+        """
+        return self.get_config(model).field_names
 
     def get_reference_model(self, model=None):
-        try:
-            return self.registry.get(model).reference_model
-        except AttributeError:
-            raise SiteReferenceFieldsError(
-                f'Model not registered. Got {model}')
+        """Returns the reference model associated with the
+        reference configuration of "model".
+        """
+        return self.get_config(model).reference_model
 
     def validate(self):
         """Validates the reference data for all classes in the
@@ -67,7 +88,7 @@ class Site:
                     ReferenceFieldValidationError) as e:
                 sys.stdout.write(
                     f' ( ) {model}. {style.ERROR("ERROR!!")}    \n')
-                raise SiteReferenceFieldsError(e) from e
+                raise SiteReferenceConfigError(e) from e
             else:
                 sys.stdout.write(f' (*) {model}. {style.SUCCESS("OK")}    \n')
         sys.stdout.write('Done.\n')
@@ -83,17 +104,51 @@ class Site:
                 mod = import_module(app)
                 try:
                     before_import_registry = copy.copy(
-                        site_reference_fields.registry)
+                        site_reference_configs.registry)
                     import_module(f'{app}.{module_name}')
                     sys.stdout.write(
                         f' * registered reference fields from application \'{app}\'\n')
                 except Exception as e:
                     if f'No module named \'{app}.{module_name}\'' not in str(e):
-                        site_reference_fields.registry = before_import_registry
+                        site_reference_configs.registry = before_import_registry
                         if module_has_submodule(mod, module_name):
-                            raise SiteReferenceFieldsImportError(e) from e
+                            raise SiteReferenceConfigImportError(e) from e
             except ImportError:
                 pass
 
+    def register_from_visit_schedule(self, site_visit_schedules=None):
+        site_visit_schedules.autodiscover(verbose=False)
+        for visit_schedule in site_visit_schedules.registry.values():
+            reference = ReferenceModelConfig(
+                model=visit_schedule.visit_model,
+                fields=['report_datetime'])
+            self._register_if_new(reference)
+            for schedule in visit_schedule.schedules.values():
+                for model in [schedule.enrollment_model, schedule.disenrollment_model]:
+                    reference = ReferenceModelConfig(
+                        model=model, fields=['report_datetime'])
+                    self._register_if_new(reference)
+                for visit in schedule.visits.values():
+                    for crf in visit.crfs:
+                        reference = ReferenceModelConfig(
+                            model=crf.model,
+                            fields=['report_datetime'])
+                        self._register_if_new(reference)
+                    for requisition in visit.requisitions:
+                        reference = ReferenceModelConfig(
+                            model=requisition.model,
+                            fields=['panel_name', 'is_drawn', 'reason_not_drawn'])
+                        self._register_if_new(reference)
 
-site_reference_fields = Site()
+    def _register_if_new(self, reference):
+        try:
+            self.register(reference)
+        except AlreadyRegistered:
+            self.reregister(reference)
+
+    def add_fields_to_config(self, model=None, fields=None):
+        reference_config = self.get_config(model)
+        reference_config.add_fields(fields)
+
+
+site_reference_configs = Site()

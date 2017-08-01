@@ -27,6 +27,11 @@ class ReferenceModelConfig:
             raise ReferenceDuplicateField(
                 f'Duplicate field detected. Got {fields}. See \'{model}\'')
 
+    def add_fields(self, fields=None):
+        self.field_names.extend(fields)
+        self.field_names = list(set(self.field_names))
+        self.field_names.sort()
+
     def __repr__(self):
         return f'{self.__class__.__name__}(model={self.model})'
 
@@ -46,8 +51,8 @@ class ReferenceModelConfig:
                     f'Invalid reference field. Got {field_name} not found '
                     f'on model {repr(model_cls)}. See {repr(self)}.')
         try:
-            model_cls.edc_reference_model_updater_cls
-            model_cls.edc_reference_model_deleter_cls
+            model_cls.reference_updater_cls
+            model_cls.reference_deleter_cls
         except AttributeError:
             raise ReferenceFieldValidationError(
                 f'Missing reference model mixin. See model {repr(model_cls)}')

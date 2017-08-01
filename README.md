@@ -5,7 +5,7 @@
 pivoted reference table for edc modules
 
 
-## Usage
+## Usage and Configuration
 
 Declare a model with the `ReferenceModelMixin`.
 
@@ -26,14 +26,14 @@ Declare a model with the `ReferenceModelMixin`.
         f4 = models.DatetimeField(null=True)
 
         
-Register the model and the relevant fields with the site global, `site_reference_fields`:
+Register the model and the relevant fields with the site global, `site_reference_configs`:
 
     from edc_reference.site import ReferenceModelConfig
 
     reference = ReferenceModelConfig(
         model='edc_reference.crfone',
         fields=['f1', 'f4'])
-    site_reference_fields.register(reference)
+    site_reference_configs.register(reference)
         
 Create a model instance:
 
@@ -84,3 +84,8 @@ Model managers methods are also available, for example:
     'happiness'
      
  
+### Accessing pivoted data with `LongitudinalRefset`
+
+
+
+    

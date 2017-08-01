@@ -1,10 +1,10 @@
 from django.apps import apps as django_apps
 from django.db import transaction
 
-from .site import site_reference_fields
+from ..site import site_reference_configs
 
 
-class ReferenceModelDeleter:
+class ReferenceDeleter:
 
     """A class to delete all instances for the reference
     model for this model instance.
@@ -13,7 +13,7 @@ class ReferenceModelDeleter:
     """
 
     def __init__(self, model_obj=None):
-        reference_model = site_reference_fields.get_reference_model(
+        reference_model = site_reference_configs.get_reference_model(
             model=model_obj._meta.label_lower)
         self.reference_model_cls = django_apps.get_model(reference_model)
         self.model_obj = model_obj
