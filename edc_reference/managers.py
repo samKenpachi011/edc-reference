@@ -45,3 +45,12 @@ class ReferenceManager(models.Manager):
         except ObjectDoesNotExist:
             model_obj = None
         return model_obj
+
+    def get_by_natural_key(self, identifier, timepoint, report_datetime,
+                           model, field_name):
+        return self.get(
+            identifier=identifier,
+            timepoint=timepoint,
+            report_datetime=report_datetime,
+            model=field_name
+        )

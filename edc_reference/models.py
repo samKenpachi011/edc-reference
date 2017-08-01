@@ -67,6 +67,11 @@ class Reference(BaseUuidModel):
                 break
         return value
 
+    def natural_key(self):
+        return (
+            self.identifier, self.timepoint, self.report_datetime, self.model,
+            self.field_name)
+
     class Meta:
         unique_together = ['identifier', 'timepoint',
                            'report_datetime', 'model', 'field_name']
