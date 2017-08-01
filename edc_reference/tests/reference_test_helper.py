@@ -1,9 +1,8 @@
+from datetime import date, datetime
 from django.apps import apps as django_apps
+from django.core.exceptions import ObjectDoesNotExist
 
 from ..site import site_reference_configs
-from datetime import date, datetime
-from django.core.exceptions import ObjectDoesNotExist
-from collections import namedtuple
 
 
 class ReferenceTestHelperError(Exception):
@@ -84,18 +83,6 @@ class ReferenceTestHelper:
                     timepoint=visit_code,
                     field_name=field_name)
             reference.update_value(value=value, internal_type=internal_type)
-
-#     def update_for_model(self, value=None, model=None, report_datetime=None,
-#                          field_name=None, internal_type=None):
-#         reference = self.reference_model_cls.objects.get(
-#             model=model,
-#             identifier=self.subject_identifier,
-#             report_datetime=report_datetime,
-#             field_name=field_name)
-#         if internal_type not in self.field_types:
-#             raise TypeError(
-#                 f'Invalid internal type. Got \'{internal_type}\'')
-#         reference.update_value(value=value, internal_type=internal_type)
 
     def create_visit(self, report_datetime=None, timepoint=None):
         reference = self.reference_model_cls.objects.create(

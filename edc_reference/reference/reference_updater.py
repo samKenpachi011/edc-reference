@@ -8,7 +8,7 @@ class ReferenceFieldNotFound(Exception):
 
 class ReferenceUpdater:
     """Updates or creates each reference model instance; one for
-    each field in `edc_reference_fields` for this model_obj.
+    each field in `edc_reference` for this model_obj.
     """
 
     getter_cls = ReferenceGetter

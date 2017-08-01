@@ -94,10 +94,10 @@ class Site:
         sys.stdout.write('Done.\n')
 
     def autodiscover(self, module_name=None):
-        """Autodiscovers classes in the reference_fields.py file of any
+        """Autodiscovers classes in the reference_model_configs.py file of any
         INSTALLED_APP.
         """
-        module_name = module_name or 'reference_fields'
+        module_name = module_name or 'reference_model_configs'
         sys.stdout.write(f' * checking for {module_name} ...\n')
         for app in django_apps.app_configs:
             try:
@@ -107,7 +107,7 @@ class Site:
                         site_reference_configs.registry)
                     import_module(f'{app}.{module_name}')
                     sys.stdout.write(
-                        f' * registered reference fields from application \'{app}\'\n')
+                        f' * registered reference model configs from application \'{app}\'\n')
                 except Exception as e:
                     if f'No module named \'{app}.{module_name}\'' not in str(e):
                         site_reference_configs.registry = before_import_registry
