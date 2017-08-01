@@ -45,18 +45,18 @@ class Reference(BaseUuidModel):
         """Updates the correct `value` field based on the
         field class datatype.
         """
-        internal_type = internal_type or field.get_internal_type()
+        self.datatype = internal_type or field.get_internal_type()
         update = None
         for fld in self._meta.get_fields():
             if fld.name.startswith('value'):  # e.g. value_str, value_int, etc
-                if fld.get_internal_type() == internal_type:
+                if fld.get_internal_type() == self.datatype:
                     update = (fld.name, value)
                     break
         if update:
             setattr(self, *update),
         else:
             raise ReferenceFieldDatatypeNotFound(
-                f'Reference field internal_type not found. Got \'{internal_type}\'. '
+                f'Reference field internal_type not found. Got \'{self.datatype}\'. '
                 f'model={self.model}.{self.field_name} '
                 f'Expected a django.models.field internal type like \'CharField\', '
                 '\'DateTimeField\', etc.')
