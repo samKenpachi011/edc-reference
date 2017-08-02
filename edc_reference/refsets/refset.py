@@ -1,7 +1,7 @@
+from django.core.exceptions import ObjectDoesNotExist
 from edc_reference.site import SiteReferenceConfigError
 
 from ..site import site_reference_configs
-from django.core.exceptions import ObjectDoesNotExist
 
 
 class RefsetError(Exception):

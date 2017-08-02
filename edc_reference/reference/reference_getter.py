@@ -4,6 +4,10 @@ from django.core.exceptions import ObjectDoesNotExist
 from ..site import site_reference_configs
 
 
+class ReferenceObjectDoesNotExist(Exception):
+    pass
+
+
 class ReferenceGetter:
     """A class that gets the reference model instance for a given
     model or attributes of the model.
@@ -46,13 +50,15 @@ class ReferenceGetter:
         reference_model_cls = django_apps.get_model(reference_model)
         try:
             self.object = reference_model_cls.objects.get(**self._options)
-        except ObjectDoesNotExist:
+        except ObjectDoesNotExist as e:
             if create:
                 self.object = reference_model_cls.objects.create(
                     **self._options)
+                self.value = getattr(self.object, 'value')
+                self.has_value = True
             else:
-                self.object = None
-            self.value = None
+                raise ReferenceObjectDoesNotExist(
+                    f'{e}. Using {self._options}')
         else:
             self.value = getattr(self.object, 'value')
             self.has_value = True

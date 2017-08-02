@@ -6,10 +6,11 @@ from uuid import uuid4
 from edc_base.utils import get_utcnow
 
 from ..models import Reference, ReferenceFieldDatatypeNotFound
-from ..reference_model_config import ReferenceModelConfig
-from ..reference_model_config import ReferenceDuplicateField, ReferenceFieldValidationError
 from ..reference import ReferenceDeleter, ReferenceGetter
+from ..reference import ReferenceObjectDoesNotExist
 from ..reference import ReferenceUpdater, ReferenceFieldNotFound
+from ..reference_model_config import ReferenceDuplicateField, ReferenceFieldValidationError
+from ..reference_model_config import ReferenceModelConfig
 from ..site import site_reference_configs, SiteReferenceConfigError
 from .models import CrfOne, SubjectVisit
 from .models import CrfWithUnknownDatatype, TestModel, SubjectRequisition
@@ -271,6 +272,18 @@ class TestReferenceModel(TestCase):
             model_obj=crf_one)
         self.assertTrue(repr(reference))
 
+    def test_report_datetime_uses_visit_report_datetime(self):
+        CrfOne.objects.create(
+            subject_visit=self.subject_visit,
+            field_int=100)
+        report_datetimes = []
+        for obj in Reference.objects.filter(model__icontains='crfone'):
+            report_datetimes.append(obj.report_datetime)
+        self.assertGreater(len(report_datetimes), 0)
+        for report_datetime in report_datetimes:
+            self.assertEqual(
+                report_datetime, self.subject_visit.report_datetime)
+
     def test_reference_getter_sets_attr(self):
         integer = 100
         crf_one = CrfOne.objects.create(
@@ -330,17 +343,32 @@ class TestReferenceModel(TestCase):
             visit_code=crf_one.visit.visit_code)
         self.assertEqual(reference.field_int, integer)
 
-    def test_reference_getter_with_bad_field(self):
+    def test_reference_getter_with_bad_field_raises(self):
         integer = 100
         crf_one = CrfOne.objects.create(
             subject_visit=self.subject_visit,
             field_int=integer)
-        reference = ReferenceGetter(
+        self.assertRaises(
+            ReferenceObjectDoesNotExist,
+            reference=ReferenceGetter,
             field_name='blah',
             model='edc_reference.crfone',
-            model_obj=crf_one.visit)
-        self.assertFalse(reference.has_value)
-        self.assertIsNone(reference.value)
+            model_obj=crf_one)
+        try:
+            ReferenceGetter(
+                field_name='blah',
+                model='edc_reference.crfone',
+                model_obj=crf_one)
+        except ReferenceObjectDoesNotExist:
+            pass
+
+    def test_reference_getter_doesnotexist(self):
+        self.assertRaises(
+            ReferenceObjectDoesNotExist,
+            reference=ReferenceGetter,
+            field_name='blah',
+            model='edc_reference.crfone',
+            model_obj=self.subject_visit)
 
     def test_model_manager_crf(self):
         strval = 'erik'
