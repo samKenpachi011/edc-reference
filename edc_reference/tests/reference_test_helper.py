@@ -11,6 +11,8 @@ class ReferenceTestHelperError(Exception):
 
 class ReferenceTestHelper:
 
+    visit_model = 'bcpp_subject.subjectvisit',
+
     field_types = {
         'CharField': (str),
         'DateTimeField': (datetime),
@@ -18,6 +20,8 @@ class ReferenceTestHelper:
         'IntegerField': (int)}
 
     def __init__(self, visit_model=None, subject_identifier=None):
+        if visit_model:
+            self.visit_model = visit_model
         self.subject_identifier = subject_identifier
         self.app_label = visit_model.split('.')[0]
         self.reference_model_cls = django_apps.get_model(
@@ -87,7 +91,7 @@ class ReferenceTestHelper:
     def create_visit(self, report_datetime=None, timepoint=None):
         reference = self.reference_model_cls.objects.create(
             identifier=self.subject_identifier,
-            model='bcpp_subject.subjectvisit',
+            model=self.visit_model,
             report_datetime=report_datetime,
             timepoint=timepoint,
             field_name='report_datetime')
