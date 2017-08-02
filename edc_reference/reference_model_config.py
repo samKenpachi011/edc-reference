@@ -13,6 +13,10 @@ class ReferenceDuplicateField(Exception):
     pass
 
 
+class ReferenceFieldAlreadyAdded(Exception):
+    pass
+
+
 class ReferenceModelConfig:
 
     reference_model = 'edc_reference.reference'
@@ -28,6 +32,10 @@ class ReferenceModelConfig:
                 f'Duplicate field detected. Got {fields}. See \'{model}\'')
 
     def add_fields(self, fields=None):
+        for field_name in fields:
+            if field_name in self.field_names:
+                raise ReferenceFieldAlreadyAdded(
+                    f'Field already added. Got {field_name}. See \'{self.model}\'')
         self.field_names.extend(fields)
         self.field_names = list(set(self.field_names))
         self.field_names.sort()

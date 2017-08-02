@@ -14,6 +14,8 @@ from ..reference_model_config import ReferenceModelConfig
 from ..site import site_reference_configs, SiteReferenceConfigError
 from .models import CrfOne, SubjectVisit
 from .models import CrfWithUnknownDatatype, TestModel, SubjectRequisition
+from dateutil.relativedelta import relativedelta
+from pprint import pprint
 
 
 class TestReferenceModel(TestCase):
@@ -25,10 +27,10 @@ class TestReferenceModel(TestCase):
             model='edc_reference.subjectvisit',
             fields=['report_datetime', 'visit_code'])
         self.testmodel_reference = ReferenceModelConfig(
-            model='edc_reference.testmodel', fields=['field_str'])
+            model='edc_reference.testmodel', fields=['field_str', 'report_datetime'])
         self.crfone_reference = ReferenceModelConfig(
             model='edc_reference.crfone',
-            fields=['field_str', 'field_date', 'field_datetime', 'field_int'])
+            fields=['field_str', 'field_date', 'field_datetime', 'field_int', 'report_datetime'])
         site_reference_configs.register(subjectvisit_reference)
         site_reference_configs.register(self.testmodel_reference)
         site_reference_configs.register(self.crfone_reference)
@@ -122,8 +124,8 @@ class TestReferenceModel(TestCase):
             field_str='erik')
         self.assertEqual(
             len(site_reference_configs.get_fields(
-                'edc_reference.crfone')), 4)
-        self.assertEqual(Reference.objects.all().count(), 6)
+                'edc_reference.crfone')), 5)
+        self.assertEqual(Reference.objects.all().count(), 7)
 
     def test_model_creates_reference2(self):
         CrfOne.objects.create(
@@ -139,6 +141,21 @@ class TestReferenceModel(TestCase):
         except ObjectDoesNotExist as e:
             self.fail(f'ObjectDoesNotExist unexpectedly raised. Got {e}')
         self.assertEqual(reference.value, 'erik')
+
+    def test_model_get_for_report_datetime(self):
+        CrfOne.objects.create(
+            subject_visit=self.subject_visit,
+            field_str='erik')
+        try:
+            reference = Reference.objects.get(
+                identifier=self.subject_identifier,
+                timepoint=self.subject_visit.visit_code,
+                report_datetime=self.subject_visit.report_datetime,
+                model='edc_reference.crfone',
+                field_name='report_datetime')
+        except ObjectDoesNotExist as e:
+            self.fail(f'ObjectDoesNotExist unexpectedly raised. Got {e}')
+        self.assertEqual(reference.value, self.subject_visit.report_datetime)
 
     def test_model_updates_reference(self):
         crf_one = CrfOne.objects.create(
@@ -189,24 +206,54 @@ class TestReferenceModel(TestCase):
             field_name='field_int')
         self.assertEqual(reference.value, integer)
 
+    @tag('2')
     def test_model_creates_for_all(self):
         strval = 'erik'
         integer = 100
         dte = date.today()
         dtetime = get_utcnow()
+        field_datetime = dtetime - relativedelta(years=1)
         CrfOne.objects.create(
             subject_visit=self.subject_visit,
+            report_datetime=dtetime - relativedelta(years=10),
             field_str=strval,
             field_int=integer,
             field_date=dte,
-            field_datetime=dtetime)
+            field_datetime=field_datetime)
         for field_name in site_reference_configs.get_fields('edc_reference.crfone'):
             reference = Reference.objects.get(
                 identifier=self.subject_identifier,
+                model='edc_reference.crfone',
                 timepoint=self.subject_visit.visit_code,
                 report_datetime=self.subject_visit.report_datetime,
                 field_name=field_name)
-            self.assertIn(reference.value, [strval, integer, dte, dtetime])
+            self.assertIn(reference.value, [
+                strval, integer, dte, field_datetime,
+                self.subject_visit.report_datetime],
+                msg=f'field_name={field_name}')
+
+    @tag('2')
+    def test_model_creates_and_gets_for_report_datetime(self):
+        """Assert uses subject visit report_datetime and not
+        CRF report_datetime for field_name='report_datetime'.
+        """
+        dtetime = get_utcnow()
+        crf_one = CrfOne.objects.create(
+            subject_visit=self.subject_visit,
+            report_datetime=get_utcnow() - relativedelta(years=10),
+            field_datetime=dtetime)
+        reference = Reference.objects.get(
+            identifier=self.subject_identifier,
+            model='edc_reference.crfone',
+            timepoint=self.subject_visit.visit_code,
+            report_datetime=self.subject_visit.report_datetime,
+            field_name='report_datetime')
+        self.assertEqual(reference.value, self.subject_visit.report_datetime)
+
+        getter = ReferenceGetter(
+            field_name='report_datetime',
+            model_obj=crf_one)
+        self.assertEqual(getter.value, self.subject_visit.report_datetime)
 
     def test_model_create_handles_none(self):
         CrfOne.objects.create(
@@ -383,7 +430,7 @@ class TestReferenceModel(TestCase):
             field_datetime=dtetime)
         qs = Reference.objects.filter_crf_for_visit(
             'edc_reference.crfone', self.subject_visit)
-        self.assertEqual(qs.count(), 4)
+        self.assertEqual(qs.count(), 5)
 
     def test_model_manager_crf_by_field(self):
         strval = 'erik'

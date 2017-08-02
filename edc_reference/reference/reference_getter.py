@@ -2,6 +2,7 @@ from django.apps import apps as django_apps
 from django.core.exceptions import ObjectDoesNotExist
 
 from ..site import site_reference_configs
+from pprint import pprint
 
 
 class ReferenceObjectDoesNotExist(Exception):
@@ -19,6 +20,7 @@ class ReferenceGetter:
                  subject_identifier=None, report_datetime=None, visit_code=None,
                  create=None):
         self._object = None
+        self.value = None
         self.has_value = False
         self.field_name = field_name
         if model_obj:
@@ -54,8 +56,7 @@ class ReferenceGetter:
             if create:
                 self.object = reference_model_cls.objects.create(
                     **self._options)
-                self.value = getattr(self.object, 'value')
-                self.has_value = True
+                # note: updater needs to "update_value"
             else:
                 raise ReferenceObjectDoesNotExist(
                     f'{e}. Using {self._options}')
