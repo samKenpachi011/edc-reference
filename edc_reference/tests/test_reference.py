@@ -15,7 +15,6 @@ from ..site import site_reference_configs, SiteReferenceConfigError
 from .models import CrfOne, SubjectVisit
 from .models import CrfWithUnknownDatatype, TestModel, SubjectRequisition
 from dateutil.relativedelta import relativedelta
-from pprint import pprint
 
 
 class TestReferenceModel(TestCase):
@@ -206,7 +205,6 @@ class TestReferenceModel(TestCase):
             field_name='field_int')
         self.assertEqual(reference.value, integer)
 
-    @tag('2')
     def test_model_creates_for_all(self):
         strval = 'erik'
         integer = 100
@@ -232,7 +230,6 @@ class TestReferenceModel(TestCase):
                 self.subject_visit.report_datetime],
                 msg=f'field_name={field_name}')
 
-    @tag('2')
     def test_model_creates_and_gets_for_report_datetime(self):
         """Assert uses subject visit report_datetime and not
         CRF report_datetime for field_name='report_datetime'.
