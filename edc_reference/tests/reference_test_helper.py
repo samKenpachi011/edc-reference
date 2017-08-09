@@ -11,7 +11,7 @@ class ReferenceTestHelperError(Exception):
 
 class ReferenceTestHelper:
 
-    visit_model = 'bcpp_subject.subjectvisit',
+    visit_model = None
 
     field_types = {
         'CharField': (str),

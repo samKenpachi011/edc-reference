@@ -48,9 +48,16 @@ class Site:
     def reregister(self, reference=None):
         if reference.model not in self.registry:
             raise ReferenceConfigNotRegistered(
-                f'Reference model configuration has not been registered. '
-                f'Got {reference.model}')
+                f'Reregister failed. Reference model configuration has not '
+                f'been registered. Got {reference.model}')
         self.registry.update({reference.model: reference})
+
+    def unregister(self, model=None):
+        if model not in self.registry:
+            raise ReferenceConfigNotRegistered(
+                f'Unregister failed. Reference model configuration has not '
+                f'been registered. Got {model}')
+        self.registry = {k: v for k, v in self.registry.items() if k != model}
 
     def get_config(self, model=None):
         try:
