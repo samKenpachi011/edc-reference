@@ -127,6 +127,7 @@ KEY_PATH = os.path.join(BASE_DIR, 'crypto_fields')
 if 'test' in sys.argv:
 
     class DisableMigrations:
+
         def __contains__(self, item):
             return True
 
