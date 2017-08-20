@@ -8,10 +8,11 @@ class ReferenceFieldNotFound(Exception):
 
 class ReferenceUpdater:
     """Updates or creates each reference model instance; one for
-    each field in `edc_reference_fields` for this model_obj.
+    each field in `edc_reference` for this model_obj.
     """
 
     getter_cls = ReferenceGetter
+    crf_visit_attr = 'visit'
 
     def __init__(self, model_obj=None):
         reference_fields = site_reference_configs.get_fields(
@@ -30,6 +31,14 @@ class ReferenceUpdater:
                 model_obj=model_obj,
                 field_name=field_name,
                 create=True)
-            value = getattr(model_obj, field_obj.name)
-            reference.object.update_value(value=value, field=field_obj)
+            if field_obj.name == 'report_datetime':
+                try:
+                    visit = getattr(model_obj, self.crf_visit_attr)
+                    value = getattr(visit, field_name)
+                except AttributeError:
+                    value = getattr(model_obj, field_name)
+            else:
+                value = getattr(model_obj, field_name)
+            reference.object.update_value(
+                value=value, internal_type=field_obj.get_internal_type())
             reference.object.save()

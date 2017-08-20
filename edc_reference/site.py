@@ -48,9 +48,16 @@ class Site:
     def reregister(self, reference=None):
         if reference.model not in self.registry:
             raise ReferenceConfigNotRegistered(
-                f'Reference model configuration has not been registered. '
-                f'Got {reference.model}')
+                f'Reregister failed. Reference model configuration has not '
+                f'been registered. Got {reference.model}')
         self.registry.update({reference.model: reference})
+
+    def unregister(self, model=None):
+        if model not in self.registry:
+            raise ReferenceConfigNotRegistered(
+                f'Unregister failed. Reference model configuration has not '
+                f'been registered. Got {model}')
+        self.registry = {k: v for k, v in self.registry.items() if k != model}
 
     def get_config(self, model=None):
         try:
@@ -94,10 +101,10 @@ class Site:
         sys.stdout.write('Done.\n')
 
     def autodiscover(self, module_name=None):
-        """Autodiscovers classes in the reference_fields.py file of any
+        """Autodiscovers classes in the reference_model_configs.py file of any
         INSTALLED_APP.
         """
-        module_name = module_name or 'reference_fields'
+        module_name = module_name or 'reference_model_configs'
         sys.stdout.write(f' * checking for {module_name} ...\n')
         for app in django_apps.app_configs:
             try:
@@ -107,7 +114,7 @@ class Site:
                         site_reference_configs.registry)
                     import_module(f'{app}.{module_name}')
                     sys.stdout.write(
-                        f' * registered reference fields from application \'{app}\'\n')
+                        f' * registered reference model configs from application \'{app}\'\n')
                 except Exception as e:
                     if f'No module named \'{app}.{module_name}\'' not in str(e):
                         site_reference_configs.registry = before_import_registry
@@ -124,10 +131,6 @@ class Site:
                 fields=['report_datetime'])
             self._register_if_new(reference)
             for schedule in visit_schedule.schedules.values():
-                for model in [schedule.enrollment_model, schedule.disenrollment_model]:
-                    reference = ReferenceModelConfig(
-                        model=model, fields=['report_datetime'])
-                    self._register_if_new(reference)
                 for visit in schedule.visits.values():
                     for crf in visit.crfs:
                         reference = ReferenceModelConfig(

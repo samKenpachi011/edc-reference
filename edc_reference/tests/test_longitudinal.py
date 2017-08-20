@@ -8,6 +8,7 @@ from ..models import Reference
 from ..reference_model_config import ReferenceModelConfig
 from ..site import site_reference_configs
 from .models import SubjectVisit, CrfOne
+from pprint import pprint
 
 
 class TestLongitudinal(TestCase):
@@ -49,6 +50,21 @@ class TestLongitudinal(TestCase):
             model='edc_reference.crfone',
             reference_model_cls=Reference)
         self.assertEqual([ref.timepoint for ref in refset], ['3', '2', '1'])
+
+    def test_longitudinal_refset_uses_subject_visit_report_datetime(self):
+        longitudinal_refset = LongitudinalRefset(
+            subject_identifier=self.subject_identifier,
+            visit_model='edc_reference.subjectvisit',
+            model='edc_reference.crfone',
+            reference_model_cls=Reference)
+        subject_visits = SubjectVisit.objects.filter(
+            subject_identifier=self.subject_identifier).order_by('report_datetime')
+        report_datetimes = [obj.report_datetime for obj in subject_visits]
+        self.assertEqual(
+            [ref.report_datetime for ref in longitudinal_refset], report_datetimes)
+        self.assertEqual(
+            [v.report_datetime for v in longitudinal_refset.visit_references],
+            report_datetimes)
 
     def test_no_refsets(self):
         refset = LongitudinalRefset(

@@ -34,7 +34,7 @@ class TestSite(TestCase):
     def test_autodiscover(self):
         site_reference_configs.registry = {}
         site_reference_configs.loaded = False
-        site_reference_configs.autodiscover('tests.reference_fields')
+        site_reference_configs.autodiscover('tests.reference_model_configs')
         self.assertTrue(site_reference_configs.loaded)
         self.assertIn('edc_reference.erik', list(
             site_reference_configs.registry))
@@ -45,7 +45,8 @@ class TestSite(TestCase):
     def test_autodiscover_bad(self):
         self.assertRaises(
             SiteReferenceConfigImportError,
-            site_reference_configs.autodiscover, 'tests.reference_fields_bad')
+            site_reference_configs.autodiscover,
+            module_name='tests.reference_model_configs_bad')
 
     def test_validate_ok(self):
         model = 'edc_reference.crfone'
