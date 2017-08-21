@@ -131,10 +131,6 @@ class Site:
                 fields=['report_datetime'])
             self._register_if_new(reference)
             for schedule in visit_schedule.schedules.values():
-                for model in [schedule.enrollment_model, schedule.disenrollment_model]:
-                    reference = ReferenceModelConfig(
-                        model=model, fields=['report_datetime'])
-                    self._register_if_new(reference)
                 for visit in schedule.visits.values():
                     for crf in visit.crfs:
                         reference = ReferenceModelConfig(
