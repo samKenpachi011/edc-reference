@@ -1,0 +1,11 @@
+from django.contrib.admin.sites import AdminSite
+
+
+class EdcReferenceAdminSite(AdminSite):
+    site_header = 'Edc Reference'
+    site_title = 'Edc Reference'
+    index_title = 'Edc Reference'
+    site_url = '/admininistration/'
+
+
+edc_reference_admin = EdcReferenceAdminSite(name='edc_reference_admin')

@@ -1,3 +1,4 @@
+edc_reference/migrations/*
 .pydevproject
 .project
 .settings
