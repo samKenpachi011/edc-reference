@@ -2,7 +2,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from edc_reference.site import SiteReferenceConfigError
 
 from ..site import site_reference_configs
-from pprint import pprint
 
 
 class RefsetError(Exception):
@@ -37,7 +36,6 @@ class Refset:
         self.model = model
         opts = dict(
             identifier=self.subject_identifier,
-            # report_datetime=self.report_datetime,  # FIXME:
             timepoint=timepoint,
             model=model)
         try:
