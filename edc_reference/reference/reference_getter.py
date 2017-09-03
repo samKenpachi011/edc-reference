@@ -2,7 +2,6 @@ from django.apps import apps as django_apps
 from django.core.exceptions import ObjectDoesNotExist
 
 from ..site import site_reference_configs
-from pprint import pprint
 
 
 class ReferenceObjectDoesNotExist(Exception):
