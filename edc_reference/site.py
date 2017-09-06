@@ -8,6 +8,7 @@ from django.core.management.color import color_style
 from .reference_model_config import ReferenceDuplicateField, ReferenceModelValidationError
 from .reference_model_config import ReferenceFieldValidationError
 from .reference_model_config import ReferenceModelConfig
+from edc_reference.reference_model_config import ReferenceFieldAlreadyAdded
 
 
 class AlreadyRegistered(Exception):
@@ -30,7 +31,27 @@ class SiteReferenceConfigError(Exception):
     pass
 
 
+class ReferenceUpdater:
+
+    def update(self, model=None, fields=None, get_config=None):
+        try:
+            reference = get_config(model)
+        except SiteReferenceConfigError:
+            reference = ReferenceModelConfig(
+                model=model,
+                fields=fields)
+        else:
+            for field in fields:
+                try:
+                    reference.add_fields([field])
+                except ReferenceFieldAlreadyAdded:
+                    pass
+        return reference
+
+
 class Site:
+
+    reference_updater = ReferenceUpdater()
 
     def __init__(self):
         self.registry = {}
@@ -126,21 +147,27 @@ class Site:
     def register_from_visit_schedule(self, site_visit_schedules=None):
         site_visit_schedules.autodiscover(verbose=False)
         for visit_schedule in site_visit_schedules.registry.values():
-            reference = ReferenceModelConfig(
+
+            reference = self.reference_updater.update(
                 model=visit_schedule.visit_model,
-                fields=['report_datetime'])
+                fields=['report_datetime'],
+                get_config=self.get_config)
             self._register_if_new(reference)
+
             for schedule in visit_schedule.schedules.values():
                 for visit in schedule.visits.values():
                     for crf in visit.crfs:
-                        reference = ReferenceModelConfig(
+                        reference = self.reference_updater.update(
                             model=crf.model,
-                            fields=['report_datetime'])
+                            fields=['report_datetime'],
+                            get_config=self.get_config)
                         self._register_if_new(reference)
                     for requisition in visit.requisitions:
-                        reference = ReferenceModelConfig(
+                        reference = self.reference_updater.update(
                             model=requisition.model,
-                            fields=['panel_name', 'is_drawn', 'reason_not_drawn'])
+                            fields=['requisition_datetime', 'panel_name', 'is_drawn',
+                                    'reason_not_drawn'],
+                            get_config=self.get_config)
                         self._register_if_new(reference)
 
     def _register_if_new(self, reference):
