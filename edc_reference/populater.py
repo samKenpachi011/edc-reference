@@ -2,6 +2,7 @@ import arrow
 import sys
 
 from django.apps import apps as django_apps
+from edc_reference.models import Reference
 
 from .reference import ReferenceUpdater
 from .site import site_reference_configs
@@ -21,8 +22,9 @@ class Populater:
     reference_updater_cls = ReferenceUpdater
 
     def __init__(self, models=None, exclude_models=None, skip_existing=None,
-                 dry_run=None):
+                 dry_run=None, delete_existing=None):
         self.skip_existing = skip_existing
+        self.delete_existing = delete_existing
         if not models:
             models = list(site_reference_configs.registry)
         if not exclude_models:
@@ -54,11 +56,23 @@ class Populater:
         if self.dry_run:
             sys.stdout.write(
                 f' - This is a dry run. No data will be created/modified.\n')
-        for model in self.models:
+
+        models = [model for model in self.models if not self.skip(model=model)]
+
+        for model in models:
+            site_reference_configs.get_config(model=model)
+
+        sys.stdout.write(f' * models are {models}    \n')
+
+        if self.delete_existing:
+            sys.stdout.write(f' * deleting existing records ... \r')
+            if not self.dry_run:
+                for model in models:
+                    Reference.objects.filter(model=model).delete()
+            sys.stdout.write(f' * deleting existing records ... done.\n')
+
+        for model in models:
             index = 0
-            if self.skip(model=model):
-                sys.stdout.write(f' * skipping {model}\n')
-                continue
             sys.stdout.write(f' * {model}           \r')
             model_cls = django_apps.get_model(model)
             qs = model_cls.objects.all()
