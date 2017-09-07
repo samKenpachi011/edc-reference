@@ -8,7 +8,6 @@ from ..models import Reference
 from ..reference_model_config import ReferenceModelConfig
 from ..site import site_reference_configs
 from .models import SubjectVisit, CrfOne
-from pprint import pprint
 
 
 class TestLongitudinal(TestCase):
@@ -18,11 +17,11 @@ class TestLongitudinal(TestCase):
         site_reference_configs.registry = {}
         site_reference_configs.loaded = False
         reference = ReferenceModelConfig(
-            model='edc_reference.subjectvisit',
+            name='edc_reference.subjectvisit',
             fields=['report_datetime', 'visit_code'])
         site_reference_configs.register(reference=reference)
         reference = ReferenceModelConfig(
-            model='edc_reference.crfone',
+            name='edc_reference.crfone',
             fields=['field_date', 'field_datetime', 'field_int', 'field_str'])
         site_reference_configs.register(reference=reference)
 
@@ -47,7 +46,7 @@ class TestLongitudinal(TestCase):
         refset = LongitudinalRefset(
             subject_identifier=self.subject_identifier,
             visit_model='edc_reference.subjectvisit',
-            model='edc_reference.crfone',
+            name='edc_reference.crfone',
             reference_model_cls=Reference)
         self.assertEqual([ref.timepoint for ref in refset], ['3', '2', '1'])
 
@@ -55,7 +54,7 @@ class TestLongitudinal(TestCase):
         longitudinal_refset = LongitudinalRefset(
             subject_identifier=self.subject_identifier,
             visit_model='edc_reference.subjectvisit',
-            model='edc_reference.crfone',
+            name='edc_reference.crfone',
             reference_model_cls=Reference)
         subject_visits = SubjectVisit.objects.filter(
             subject_identifier=self.subject_identifier).order_by('report_datetime')
@@ -70,7 +69,7 @@ class TestLongitudinal(TestCase):
         refset = LongitudinalRefset(
             subject_identifier=self.subject_identifier,
             visit_model='edc_reference.subjectvisit',
-            model='edc_reference.crfone',
+            name='edc_reference.crfone',
             reference_model_cls=Reference)
         refset._refsets = []
         self.assertRaises(
@@ -81,7 +80,7 @@ class TestLongitudinal(TestCase):
         refset = LongitudinalRefset(
             subject_identifier=self.subject_identifier,
             visit_model='edc_reference.subjectvisit',
-            model='edc_reference.crfone',
+            name='edc_reference.crfone',
             reference_model_cls=Reference).order_by('-report_datetime')
         self.assertEqual(
             [ref.timepoint for ref in refset], ['1', '2', '3'])
@@ -94,14 +93,14 @@ class TestLongitudinal(TestCase):
             LongitudinalRefset(
                 subject_identifier=self.subject_identifier,
                 visit_model='edc_reference.subjectvisit',
-                model='edc_reference.crfone',
+                name='edc_reference.crfone',
                 reference_model_cls=Reference).order_by, 'blah')
 
     def test_get(self):
         refset = LongitudinalRefset(
             subject_identifier=self.subject_identifier,
             visit_model='edc_reference.subjectvisit',
-            model='edc_reference.crfone',
+            name='edc_reference.crfone',
             reference_model_cls=Reference)
         self.assertEqual(
             refset.fieldset('field_str').all().values, ['NEG', 'POS', 'POS'])
@@ -114,7 +113,7 @@ class TestLongitudinal(TestCase):
         refset = LongitudinalRefset(
             subject_identifier=self.subject_identifier,
             visit_model='edc_reference.subjectvisit',
-            model='edc_reference.crfone',
+            name='edc_reference.crfone',
             reference_model_cls=Reference)
         self.assertEqual(
             refset.fieldset('field_str').all().order_by(
@@ -129,7 +128,7 @@ class TestLongitudinal(TestCase):
         refset = LongitudinalRefset(
             subject_identifier=self.subject_identifier,
             visit_model='edc_reference.subjectvisit',
-            model='edc_reference.crfone',
+            name='edc_reference.crfone',
             reference_model_cls=Reference)
         self.assertEqual(refset.fieldset('field_str').order_by(
             'field_datetime').last(), 'POS')
@@ -140,7 +139,7 @@ class TestLongitudinal(TestCase):
         refset = LongitudinalRefset(
             subject_identifier=self.subject_identifier,
             visit_model='edc_reference.subjectvisit',
-            model='edc_reference.crfone',
+            name='edc_reference.crfone',
             reference_model_cls=Reference)
         self.assertTrue(repr(refset))
         for ref in refset:
@@ -150,7 +149,7 @@ class TestLongitudinal(TestCase):
         refset = LongitudinalRefset(
             subject_identifier=self.subject_identifier,
             visit_model='edc_reference.subjectvisit',
-            model='edc_reference.crfone',
+            name='edc_reference.crfone',
             reference_model_cls='edc_reference.reference')
         self.assertTrue(repr(refset))
         for ref in refset:

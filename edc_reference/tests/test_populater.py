@@ -18,11 +18,11 @@ class TestPopulater(TestCase):
         site_reference_configs.registry = {}
         site_reference_configs.loaded = False
         reference = ReferenceModelConfig(
-            model='edc_reference.subjectvisit',
+            name='edc_reference.subjectvisit',
             fields=['report_datetime', 'visit_code'])
         site_reference_configs.register(reference=reference)
         reference = ReferenceModelConfig(
-            model='edc_reference.crfone',
+            name='edc_reference.crfone',
             fields=['field_date', 'field_datetime', 'field_int', 'field_str'])
         site_reference_configs.register(reference=reference)
         self.report_datetime = get_utcnow()

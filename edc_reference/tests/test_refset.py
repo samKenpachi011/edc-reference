@@ -18,11 +18,11 @@ class TestRefset(TestCase):
         site_reference_configs.registry = {}
         site_reference_configs.loaded = False
         reference = ReferenceModelConfig(
-            model='edc_reference.subjectvisit',
+            name='edc_reference.subjectvisit',
             fields=['report_datetime', 'visit_code'])
         site_reference_configs.register(reference=reference)
         reference = ReferenceModelConfig(
-            model='edc_reference.crfone',
+            name='edc_reference.crfone',
             fields=['field_date', 'field_datetime', 'field_int', 'field_str'])
         site_reference_configs.register(reference=reference)
 
@@ -52,7 +52,7 @@ class TestRefset(TestCase):
         self.assertRaises(
             RefsetError,
             Refset,
-            model='edc_reference.blah',
+            name='edc_reference.blah',
             subject_identifier=self.subject_identifier,
             report_datetime=self.subject_visits[0].report_datetime,
             timepoint=self.subject_visits[0].visit_code,
@@ -62,7 +62,7 @@ class TestRefset(TestCase):
         self.assertRaises(
             RefsetError,
             Refset,
-            model='edc_reference.crfone',
+            name='edc_reference.crfone',
             subject_identifier=self.subject_identifier,
             report_datetime=self.subject_visits[0].report_datetime,
             timepoint=self.subject_visits[0].visit_code,
@@ -72,7 +72,7 @@ class TestRefset(TestCase):
         self.assertRaises(
             RefsetError,
             Refset,
-            model='edc_reference.crfone',
+            name='edc_reference.crfone',
             subject_identifier=self.subject_identifier,
             report_datetime=None,
             timepoint=self.subject_visits[0].visit_code,
@@ -82,7 +82,7 @@ class TestRefset(TestCase):
         self.assertRaises(
             RefsetError,
             Refset,
-            model='edc_reference.crfone',
+            name='edc_reference.crfone',
             subject_identifier=None,
             report_datetime=self.subject_visits[0].report_datetime,
             timepoint=self.subject_visits[0].visit_code,
@@ -92,7 +92,7 @@ class TestRefset(TestCase):
         self.assertRaises(
             RefsetError,
             Refset,
-            model='edc_reference.crfone',
+            name='edc_reference.crfone',
             subject_identifier=self.subject_identifier,
             report_datetime=self.subject_visits[0].report_datetime,
             timepoint=None,
@@ -101,7 +101,7 @@ class TestRefset(TestCase):
     def test_no_reference_instance(self):
         Reference.objects.all().delete()
         refset = Refset(
-            model='edc_reference.crfone',
+            name='edc_reference.crfone',
             subject_identifier=self.subject_identifier,
             report_datetime=self.subject_visits[0].report_datetime,
             timepoint=self.subject_visits[0].visit_code,
@@ -112,7 +112,7 @@ class TestRefset(TestCase):
     def test_missing_reference_instance_for_one_field(self):
         Reference.objects.filter(field_name='field_str').delete()
         refset = Refset(
-            model='edc_reference.crfone',
+            name='edc_reference.crfone',
             subject_identifier=self.subject_identifier,
             report_datetime=self.subject_visits[0].report_datetime,
             timepoint=self.subject_visits[0].visit_code,
@@ -121,7 +121,7 @@ class TestRefset(TestCase):
 
     def test_if_reference_exists_updates_report_datetime_in_fields(self):
         refset = Refset(
-            model='edc_reference.crfone',
+            name='edc_reference.crfone',
             subject_identifier=self.subject_identifier,
             report_datetime=self.subject_visits[0].report_datetime,
             timepoint=self.subject_visits[0].visit_code,
@@ -137,7 +137,7 @@ class TestRefset(TestCase):
         for index, subject_visit in enumerate(self.subject_visits):
             with self.subTest(index=index, subject_visit=subject_visit):
                 refset = Refset(
-                    model='edc_reference.crfone',
+                    name='edc_reference.crfone',
                     subject_identifier=subject_visit.subject_identifier,
                     report_datetime=subject_visit.report_datetime,
                     timepoint=subject_visit.visit_code,
@@ -166,7 +166,7 @@ class TestRefset(TestCase):
         self.assertRaises(
             RefsetOverlappingField,
             Refset,
-            model='edc_reference.crfone',
+            name='edc_reference.crfone',
             subject_identifier=self.subject_identifier,
             report_datetime=self.subject_visits[0].report_datetime,
             timepoint=self.subject_visits[0].visit_code,

@@ -11,19 +11,19 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
 
         parser.add_argument(
-            '--models',
+            '--names',
             dest='models',
             nargs='*',
             default=None,
-            help=('run for a select list of models (label_lower syntax)'),
+            help=(
+                'run for a select list of reference names (label_lower or lanel_lower.panel_name)'),
         )
         parser.add_argument(
-            '--exclude_models',
-            dest='exclude_models',
+            '--exclude_names',
+            dest='exclude_names',
             nargs='*',
             default=None,
-            help=('exclude a select list of models (label_lower syntax)'),
-        )
+            help='exclude reference names (label_lower or lanel_lower.panel_name)')
 
         parser.add_argument(
             '--skip-existing',

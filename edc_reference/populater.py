@@ -21,25 +21,25 @@ class Populater:
 
     reference_updater_cls = ReferenceUpdater
 
-    def __init__(self, models=None, exclude_models=None, skip_existing=None,
+    def __init__(self, names=None, exclude_names=None, skip_existing=None,
                  dry_run=None, delete_existing=None):
         self.skip_existing = skip_existing
         self.delete_existing = delete_existing
-        if not models:
-            models = list(site_reference_configs.registry)
-        if not exclude_models:
-            exclude_models = []
-        exclude_models = [m.strip() for m in exclude_models]
-        self.models = [m.strip() for m in models if m not in exclude_models]
+        if not names:
+            names = list(site_reference_configs.registry)
+        if not exclude_names:
+            exclude_names = []
+        exclude_names = [n.strip() for n in exclude_names]
+        self.names = [n.strip() for n in names if n not in exclude_names]
         self.dry_run = dry_run
 
     def summarize(self):
-        for model in self.models:
+        for name in self.names:
             reference_model = site_reference_configs.get_reference_model(
-                model=model)
+                name=name)
             reference_model_cls = django_apps.get_model(reference_model)
-            count = reference_model_cls.objects.filter(model=model).count()
-            sys.stdout.write(f' * {model}: {count} records\n')
+            count = reference_model_cls.objects.filter(model=name).count()
+            sys.stdout.write(f' * {name}: {count} records\n')
 
     def populate(self):
         if self.dry_run:
@@ -48,33 +48,34 @@ class Populater:
         sys.stdout.write(
             f'Populating reference model. Started: {t_start}\n')
         sys.stdout.write(
-            f' - found {len(site_reference_configs.registry)} models in registry.\n')
+            f' - found {len(site_reference_configs.registry)} reference names in registry.\n')
         sys.stdout.write(
-            f' - running for {len(self.models)} selected models.\n')
+            f' - running for {len(self.names)} selected reference names.\n')
         if self.skip_existing:
-            sys.stdout.write(f' - skipping models with existing references\n')
+            sys.stdout.write(
+                f' - skipping reference names with existing references\n')
         if self.dry_run:
             sys.stdout.write(
                 f' - This is a dry run. No data will be created/modified.\n')
 
-        models = [model for model in self.models if not self.skip(model=model)]
+        names = [name for name in self.names if not self.skip(name=name)]
 
-        for model in models:
-            site_reference_configs.get_config(model=model)
+        for model in names:
+            site_reference_configs.get_config(name=model)
 
-        sys.stdout.write(f' * models are {models}    \n')
+        sys.stdout.write(f' * models are {names}    \n')
 
         if self.delete_existing:
             sys.stdout.write(f' * deleting existing records ... \r')
             if not self.dry_run:
-                for model in models:
-                    Reference.objects.filter(model=model).delete()
+                for name in names:
+                    Reference.objects.filter(model=name).delete()
             sys.stdout.write(f' * deleting existing records ... done.\n')
 
-        for model in models:
+        for name in names:
             index = 0
-            sys.stdout.write(f' * {model}           \r')
-            model_cls = django_apps.get_model(model)
+            sys.stdout.write(f' * {name}           \r')
+            model_cls = django_apps.get_model('.'.join(name.split('.')[:2]))
             qs = model_cls.objects.all()
             total = qs.count()
             sub_start_time = arrow.utcnow().to('Africa/Gaborone').datetime
@@ -83,20 +84,20 @@ class Populater:
                 sub_end_time = arrow.utcnow().to('Africa/Gaborone').datetime
                 tdelta = sub_end_time - sub_start_time
                 sys.stdout.write(
-                    f' * {model} {index} / {total} ... {str(tdelta)}    \r')
+                    f' * {name} {index} / {total} ... {str(tdelta)}    \r')
                 self.reference_updater_cls(model_obj=model_obj)
             sub_end_time = arrow.utcnow().to('Africa/Gaborone').datetime
             tdelta = sub_end_time - sub_start_time
             sys.stdout.write(
-                f' * {model} {index} / {total} . OK  in {str(tdelta)}      \n')
+                f' * {name} {index} / {total} . OK  in {str(tdelta)}      \n')
         t_end = arrow.utcnow().to('Africa/Gaborone').strftime('%H:%M')
         sys.stdout.write(f'Done. Ended: {t_end}\n')
 
-    def skip(self, model=None):
+    def skip(self, name=None):
         if self.skip_existing:
             reference_model = site_reference_configs.get_reference_model(
-                model=model)
+                name=name)
             reference_model_cls = django_apps.get_model(
                 reference_model)
-            return reference_model_cls.objects.filter(model=model).exists()
+            return reference_model_cls.objects.filter(model=name).exists()
         return False

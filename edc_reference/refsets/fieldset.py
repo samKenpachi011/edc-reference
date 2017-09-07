@@ -10,6 +10,9 @@ class Fieldset:
         self._filter_values = None
         self.all()
 
+    def __repr__(self):
+        return f'{self.__class__.__name__}(field={self.field}, refsets={self._refsets})'
+
     def __iter__(self):
         return iter(self.values)
 

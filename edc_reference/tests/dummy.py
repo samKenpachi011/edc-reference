@@ -4,6 +4,11 @@ class DummyVisitSchedule:
         self.visit_model = 'edc_reference.subjectvisit'
 
 
+class Panel:
+    def __init__(self, name):
+        self.name = name
+
+
 class Crf:
     def __init__(self):
         self.model = 'edc_reference.crfone'
@@ -12,6 +17,7 @@ class Crf:
 class Requisition:
     def __init__(self):
         self.model = 'edc_reference.subjectrequisition'
+        self.panel = Panel(name='cd4')
 
 
 class DummyVisit:

@@ -21,27 +21,35 @@ class ReferenceModelConfig:
 
     reference_model = 'edc_reference.reference'
 
-    def __init__(self, fields=None, model=None):
+    def __init__(self, name=None, fields=None):
+        """
+        Keywords:
+            name = app_label.model_name for CRFs
+            name = app_label.model_name.panel_name for Requisitions
+        """
+
         if not fields:
             raise ReferenceFieldValidationError('No fields declared.')
         self.field_names = list(set(fields))
         self.field_names.sort()
-        self.model = model.lower()
+        self.name = name.lower()
+        self.model = '.'.join(name.split('.')[:2])
+
         if len(fields) != len(self.field_names):
             raise ReferenceDuplicateField(
-                f'Duplicate field detected. Got {fields}. See \'{model}\'')
+                f'Duplicate field detected. Got {fields}. See \'{self.name}\'')
 
     def add_fields(self, fields=None):
         for field_name in fields:
             if field_name in self.field_names:
                 raise ReferenceFieldAlreadyAdded(
-                    f'Field already added. Got {field_name}. See \'{self.model}\'')
+                    f'Field already added. Got {field_name}. See \'{self.name}\'')
         self.field_names.extend(fields)
         self.field_names = list(set(self.field_names))
         self.field_names.sort()
 
     def __repr__(self):
-        return f'{self.__class__.__name__}(model={self.model})'
+        return f'{self.__class__.__name__}(name={self.name}, fields={self.field_names})'
 
     def validate(self):
         """Validates the model class by doing a django.get_model lookup
