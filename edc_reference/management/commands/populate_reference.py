@@ -12,7 +12,7 @@ class Command(BaseCommand):
 
         parser.add_argument(
             '--names',
-            dest='models',
+            dest='names',
             nargs='*',
             default=None,
             help=(
@@ -32,7 +32,8 @@ class Command(BaseCommand):
             choices=[YES, NO],
             default=NO,
             const=YES,
-            help=(f'skip model if records already exist (Default: {NO})'),
+            help=(
+                f'skip reference name if records already exist (Default: {NO})'),
         )
 
         parser.add_argument(
@@ -66,8 +67,8 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        models = options.get('models')
-        exclude_models = options.get('exclude_models')
+        names = options.get('names')
+        exclude_names = options.get('exclude_names')
         skip_existing = options.get('skip_existing')
         skip_existing = None if skip_existing == NO else YES
         delete_existing = options.get('delete_existing')
@@ -77,7 +78,8 @@ class Command(BaseCommand):
         dry_run = options.get('dry_run')
         dry_run = None if dry_run == NO else YES
         populater = Populater(
-            models=models, exclude_models=exclude_models,
+            names=names,
+            exclude_names=exclude_names,
             skip_existing=skip_existing,
             delete_existing=delete_existing,
             dry_run=dry_run)
