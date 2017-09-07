@@ -55,11 +55,23 @@ class Command(BaseCommand):
             help=(f'Summarize existing data (Default: {NO})'),
         )
 
+        parser.add_argument(
+            '--delete-existing',
+            dest='delete_existing',
+            nargs='?',
+            choices=[YES, NO],
+            const=YES,
+            default=NO,
+            help=(f'Delete existing data (Default: {NO})'),
+        )
+
     def handle(self, *args, **options):
         models = options.get('models')
         exclude_models = options.get('exclude_models')
         skip_existing = options.get('skip_existing')
         skip_existing = None if skip_existing == NO else YES
+        delete_existing = options.get('delete_existing')
+        delete_existing = None if delete_existing == NO else YES
         summarize = options.get('summarize')
         summarize = None if summarize == NO else YES
         dry_run = options.get('dry_run')
@@ -67,6 +79,7 @@ class Command(BaseCommand):
         populater = Populater(
             models=models, exclude_models=exclude_models,
             skip_existing=skip_existing,
+            delete_existing=delete_existing,
             dry_run=dry_run)
         if summarize:
             populater.summarize()
