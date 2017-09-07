@@ -87,4 +87,4 @@ class Refset:
     def __repr__(self):
         return (f'{self.__class__.__name__}(model={self.model},'
                 f'subject_identifier={self.subject_identifier},'
-                f'timepoint={self.timepoint})')
+                f'timepoint={self.timepoint}) <{[f for f in self._fields]}>')
