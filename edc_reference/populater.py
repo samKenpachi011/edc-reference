@@ -60,8 +60,8 @@ class Populater:
 
         names = [name for name in self.names if not self.skip(name=name)]
 
-        for model in names:
-            site_reference_configs.get_config(name=model)
+        for name in names:
+            site_reference_configs.get_config(name=name)
 
         sys.stdout.write(f' * models are {names}    \n')
 
