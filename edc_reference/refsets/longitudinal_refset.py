@@ -24,9 +24,10 @@ class LongitudinalRefset:
     fieldset_cls = Fieldset
     refset_cls = Refset
 
-    def __init__(self, subject_identifier=None, visit_model=None, model=None,
+    def __init__(self, name=None, subject_identifier=None, visit_model=None,
                  reference_model_cls=None, **options):
-        self.model = model
+        self.name = name
+        self.model = '.'.join(name.split('.')[:2])
         self.ordering = None
         self.subject_identifier = subject_identifier
         try:
@@ -42,15 +43,15 @@ class LongitudinalRefset:
             self.visit_references = reference_model_cls.objects.filter(**opts)
         except ValueError as e:
             raise LongitudinalRefsetError(
-                f'{e}. model={self.model}. Got {opts}.')
+                f'{e}. name={self.name}. Got {opts}.')
         self._refsets = []
         for visit_reference in self.visit_references:
             self._refsets.append(
                 self.refset_cls(
+                    name=self.name,
                     subject_identifier=subject_identifier,
                     report_datetime=visit_reference.report_datetime,
                     timepoint=visit_reference.timepoint,
-                    model=self.model,
                     reference_model_cls=reference_model_cls))
         self.ordering_attrs = copy(self.refset_cls.ordering_attrs)
         for refset in self._refsets:
@@ -83,7 +84,7 @@ class LongitudinalRefset:
         try:
             self._refsets.sort(
                 key=lambda x: getattr(x, field), reverse=reverse)
-        except TypeError as e:
+        except TypeError:
             null_refsets = [
                 x for x in self._refsets if getattr(x, field) is None]
             notnull_refsets = [
@@ -91,9 +92,6 @@ class LongitudinalRefset:
             notnull_refsets.sort(
                 key=lambda x: getattr(x, field), reverse=reverse)
             self._refsets = notnull_refsets + null_refsets
-#             raise LongitudinalRefsetError(
-# f'Unorderable sequence from RefSet field. {seq}.
-# field={self.model}.{field}')
         return self
 
     def fieldset(self, field_name=None):

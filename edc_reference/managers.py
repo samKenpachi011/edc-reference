@@ -1,6 +1,6 @@
 from django.db import models
-
 from django.core.exceptions import ObjectDoesNotExist
+from django.utils.text import slugify
 
 
 class ReferenceManager(models.Manager):
@@ -14,24 +14,24 @@ class ReferenceManager(models.Manager):
             model=model,
             field_name=field_name)
 
-    def filter_crf_for_visit(self, model=None, visit=None):
+    def filter_crf_for_visit(self, name=None, visit=None):
         """Returns a queryset of reference model instances
         for this model on this visit.
         """
         return self.filter(
             identifier=visit.subject_identifier,
-            model=model,
+            model=name,
             report_datetime=visit.report_datetime,
             timepoint=visit.visit_code)
 
-    def get_crf_for_visit(self, model=None, visit=None, field_name=None):
+    def get_crf_for_visit(self, name=None, visit=None, field_name=None):
         """Returns an instance of reference model
         for this model on this visit for this field.
         """
         try:
             model_obj = self.get(
                 identifier=visit.subject_identifier,
-                model=model,
+                model=name,
                 report_datetime=visit.report_datetime,
                 timepoint=visit.visit_code,
                 field_name=field_name)
@@ -39,18 +39,18 @@ class ReferenceManager(models.Manager):
             model_obj = None
         return model_obj
 
-    def get_requisition_for_visit(self, model=None, visit=None, panel_name=None):
+    def get_requisition_for_visit(self, name=None, visit=None):
         """Returns an instance of reference model
         for this requisition on this visit for this panel.
         """
+        opts = dict(
+            identifier=visit.subject_identifier,
+            model=name,
+            report_datetime=visit.report_datetime,
+            timepoint=visit.visit_code,
+            field_name='panel_name')
         try:
-            model_obj = self.get(
-                identifier=visit.subject_identifier,
-                model=model,
-                report_datetime=visit.report_datetime,
-                timepoint=visit.visit_code,
-                field_name='panel_name',
-                value_str=panel_name)
+            model_obj = self.get(**opts)
         except ObjectDoesNotExist:
             model_obj = None
         return model_obj

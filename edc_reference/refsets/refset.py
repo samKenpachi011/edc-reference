@@ -19,11 +19,12 @@ class Refset:
 
     ordering_attrs = ['report_datetime', 'timepoint']
 
-    def __init__(self, subject_identifier=None, report_datetime=None,
-                 timepoint=None, model=None, reference_model_cls=None):
+    def __init__(self, name=None, subject_identifier=None, report_datetime=None,
+                 timepoint=None, reference_model_cls=None):
         # checking for these values so that field values
         # that are None are so because the reference instance
         # does not exist and not because these values were none.
+        self._fields = []
         if not report_datetime:
             raise RefsetError('Expected report_datetime. Got None')
         if not timepoint:
@@ -33,14 +34,17 @@ class Refset:
         self.subject_identifier = subject_identifier
         self.report_datetime = report_datetime
         self.timepoint = timepoint
-        self.model = model
+        self.name = name
+
+        self.model = '.'.join(name.split('.')[:2])
+
         opts = dict(
             identifier=self.subject_identifier,
             timepoint=timepoint,
-            model=model)
+            model=self.name)
         try:
             self._fields = dict.fromkeys(
-                site_reference_configs.get_fields(self.model))
+                site_reference_configs.get_fields(name=self.name))
         except SiteReferenceConfigError as e:
             raise RefsetError(f'{e}. See {repr(self)}')
         try:
@@ -54,6 +58,9 @@ class Refset:
         self._update_fields(references=references)
 
     def _update_fields(self, references=None):
+        """Gets and updates each reference model instance for
+        each field.
+        """
         if references.count() == 0:
             self._fields.update(report_datetime=None)
             for field_name in self._fields:
@@ -76,7 +83,7 @@ class Refset:
                     if existing_value != value:
                         raise RefsetOverlappingField(
                             f'Attribute {key} already exists with a different value. '
-                            f'Got {existing_value} == {value}. See {self.model}')
+                            f'Got {existing_value} == {value}. See {self.name}')
             self._fields.update(report_datetime=self.report_datetime)
             self._fields.update(visit_code=self.timepoint)
 
@@ -85,6 +92,6 @@ class Refset:
         return self.timepoint
 
     def __repr__(self):
-        return (f'{self.__class__.__name__}(model={self.model},'
+        return (f'{self.__class__.__name__}(name={self.name},'
                 f'subject_identifier={self.subject_identifier},'
                 f'timepoint={self.timepoint}) <{[f for f in self._fields]}>')

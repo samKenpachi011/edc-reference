@@ -14,7 +14,7 @@ class ReferenceDeleter:
 
     def __init__(self, model_obj=None):
         reference_model = site_reference_configs.get_reference_model(
-            model=model_obj._meta.label_lower)
+            name=model_obj.reference_name)
         self.reference_model_cls = django_apps.get_model(reference_model)
         self.model_obj = model_obj
         self.reference_objects = self.reference_model_cls.objects.filter(
@@ -28,4 +28,4 @@ class ReferenceDeleter:
             identifier=self.model_obj.visit.subject_identifier,
             report_datetime=self.model_obj.visit.report_datetime,
             timepoint=self.model_obj.visit.visit_code,
-            model=self.model_obj._meta.label_lower)
+            model=self.model_obj.reference_name)

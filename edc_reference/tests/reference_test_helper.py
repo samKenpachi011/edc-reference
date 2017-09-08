@@ -25,7 +25,7 @@ class ReferenceTestHelper:
         self.subject_identifier = subject_identifier
         self.app_label = visit_model.split('.')[0]
         self.reference_model_cls = django_apps.get_model(
-            site_reference_configs.get_reference_model(visit_model))
+            site_reference_configs.get_reference_model(name=visit_model))
 
     def get(self, **kwargs):
         return self.reference_model_cls.objects.get(**kwargs)
@@ -33,14 +33,10 @@ class ReferenceTestHelper:
     def filter(self, **kwargs):
         return self.reference_model_cls.objects.filter(**kwargs)
 
-    def create_for_model(self, model=None, report_datetime=None, visit_code=None, **options):
-        try:
-            model.split('.')[1]
-        except IndexError:
-            model = f'{self.app_label}.{model}'
-        for field_name in site_reference_configs.get_fields(model):
+    def create_for_model(self, reference_name=None, report_datetime=None, visit_code=None, **options):
+        for field_name in site_reference_configs.get_fields(name=reference_name):
             reference = self.reference_model_cls.objects.create(
-                model=model,
+                model=reference_name,
                 identifier=self.subject_identifier,
                 report_datetime=report_datetime,
                 timepoint=visit_code,
@@ -66,22 +62,22 @@ class ReferenceTestHelper:
                     reference.update_value(
                         value=value, internal_type=internal_type)
         return self.reference_model_cls.objects.filter(
-            model=model, identifier=self.subject_identifier,
+            model=reference_name, identifier=self.subject_identifier,
             report_datetime=report_datetime)
 
-    def update_for_model(self, model=None, report_datetime=None, visit_code=None,
+    def update_for_model(self, reference_name=None, report_datetime=None, visit_code=None,
                          valueset=None):
         for field_name, internal_type, value in valueset:
             try:
                 reference = self.reference_model_cls.objects.get(
-                    model=f'{self.app_label}.{model}',
+                    model=reference_name,
                     identifier=self.subject_identifier,
                     report_datetime=report_datetime,
                     timepoint=visit_code,
                     field_name=field_name)
             except ObjectDoesNotExist:
                 reference = self.reference_model_cls.objects.create(
-                    model=f'{self.app_label}.{model}',
+                    model=reference_name,
                     identifier=self.subject_identifier,
                     report_datetime=report_datetime,
                     timepoint=visit_code,
