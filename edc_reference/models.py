@@ -17,7 +17,7 @@ class Reference(BaseUuidModel):
 
     report_datetime = models.DateTimeField()
 
-    model = models.CharField(max_length=100)
+    model = models.CharField(max_length=250)
 
     field_name = models.CharField(max_length=50)
 
