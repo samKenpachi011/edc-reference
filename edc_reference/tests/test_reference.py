@@ -1,9 +1,12 @@
-from datetime import date
-from django.core.exceptions import ObjectDoesNotExist
-from django.test import TestCase, tag
 from uuid import uuid4
 
+from datetime import date
+from dateutil.relativedelta import relativedelta
+from django.core.exceptions import ObjectDoesNotExist
+from django.test import TestCase, tag
+
 from edc_base.utils import get_utcnow
+from edc_sync.models import OutgoingTransaction
 
 from ..models import Reference, ReferenceFieldDatatypeNotFound
 from ..reference import ReferenceDeleter, ReferenceGetter
@@ -14,7 +17,6 @@ from ..reference_model_config import ReferenceModelConfig
 from ..site import site_reference_configs, SiteReferenceConfigError
 from .models import CrfOne, SubjectVisit
 from .models import CrfWithUnknownDatatype, TestModel, SubjectRequisition
-from dateutil.relativedelta import relativedelta
 
 
 class TestReferenceModel(TestCase):

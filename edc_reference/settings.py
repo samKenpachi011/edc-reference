@@ -39,6 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'edc_device.apps.AppConfig',
+    'django_crypto_fields.apps.AppConfig',
+    'rest_framework.authtoken',
+    'edc_sync.apps.AppConfig',
     'edc_reference.apps.AppConfig',
 ]
 
