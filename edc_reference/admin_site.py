@@ -5,7 +5,7 @@ class EdcReferenceAdminSite(AdminSite):
     site_header = 'Edc Reference'
     site_title = 'Edc Reference'
     index_title = 'Edc Reference'
-    site_url = '/admininistration/'
+    site_url = '/administration/'
 
 
 edc_reference_admin = EdcReferenceAdminSite(name='edc_reference_admin')
