@@ -458,7 +458,6 @@ class TestReferenceModel(TestCase):
             'edc_reference.crfone', self.subject_visit, 'blah')
         self.assertIsNone(obj)
 
-    @tag('1')
     def test_model_manager_requisition(self):
         reference_config = ReferenceModelConfig(
             name='edc_reference.subjectrequisition.cd4',
@@ -468,13 +467,12 @@ class TestReferenceModel(TestCase):
             subject_visit=self.subject_visit,
             panel_name='cd4')
         obj = Reference.objects.get_requisition_for_visit(
-            'edc_reference.subjectrequisition', self.subject_visit, panel_name='cd4')
+            'edc_reference.subjectrequisition.cd4', self.subject_visit)
         self.assertEqual(obj.value, 'cd4')
         obj = Reference.objects.get_requisition_for_visit(
-            'edc_reference.subjectrequisition', self.subject_visit, panel_name='blah')
+            'edc_reference.subjectrequisition.blah', self.subject_visit)
         self.assertIsNone(obj)
 
-    @tag('1')
     def test_requisition_creates_two(self):
         reference_config = ReferenceModelConfig(
             name='edc_reference.subjectrequisition.cd4',
@@ -491,16 +489,15 @@ class TestReferenceModel(TestCase):
             subject_visit=self.subject_visit,
             panel_name='vl')
         obj = Reference.objects.get_requisition_for_visit(
-            'edc_reference.subjectrequisition', self.subject_visit, panel_name='vl')
+            'edc_reference.subjectrequisition.vl', self.subject_visit)
         self.assertEqual(obj.value, 'vl')
         obj = Reference.objects.get_requisition_for_visit(
-            'edc_reference.subjectrequisition', self.subject_visit, panel_name='cd4')
+            'edc_reference.subjectrequisition.cd4', self.subject_visit)
         self.assertEqual(obj.value, 'cd4')
         obj = Reference.objects.get_requisition_for_visit(
-            'edc_reference.subjectrequisition', self.subject_visit, panel_name='blah')
+            'edc_reference.subjectrequisition.blah', self.subject_visit)
         self.assertIsNone(obj)
 
-    @tag('1')
     def test_requisition_creates2(self):
         reference_config = ReferenceModelConfig(
             name='edc_reference.subjectrequisition.cd4',

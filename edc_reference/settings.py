@@ -126,6 +126,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 GIT_DIR = BASE_DIR
 KEY_PATH = os.path.join(BASE_DIR, 'crypto_fields')
+EDC_SYNC_SERVER_IP = None
 
 if 'test' in sys.argv:
 
