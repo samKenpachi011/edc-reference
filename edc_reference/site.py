@@ -85,7 +85,7 @@ class Site:
             reference_config = None
         if not reference_config:
             raise SiteReferenceConfigError(
-                f'Model not registered. Got {name}')
+                f'Model not registered. Got {name}. Expected one of {list(self.registry.keys())}.')
         return reference_config
 
     def get_fields(self, name=None):
