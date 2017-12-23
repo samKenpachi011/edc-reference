@@ -149,13 +149,12 @@ class Site:
             site_visit_schedules.autodiscover(verbose=False)
         for visit_schedule in site_visit_schedules.registry.values():
 
-            reference = self.reference_updater.update(
-                name=visit_schedule.visit_model,
-                fields=['report_datetime'],
-                get_config=self.get_config)
-            self._register_if_new(reference)
-
             for schedule in visit_schedule.schedules.values():
+                reference = self.reference_updater.update(
+                    name=schedule.visit_model_cls._meta.label_lower,
+                    fields=['report_datetime'],
+                    get_config=self.get_config)
+                self._register_if_new(reference)
                 for visit in schedule.visits.values():
                     for crf in visit.crfs:
                         reference = self.reference_updater.update(

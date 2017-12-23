@@ -1,3 +1,6 @@
+from .models import SubjectVisit
+
+
 class DummyVisitSchedule:
     def __init__(self):
         self.schedules = {}
@@ -28,9 +31,10 @@ class DummyVisit:
 
 class DummySchedule:
     def __init__(self):
-        self.enrollment_model = 'edc_reference.enrollment'
-        self.disenrollment_model = 'edc_reference.disenrollment'
+        self.onschedule_model = 'edc_reference.onschedule'
+        self.offschedule_model = 'edc_reference.offschedule'
         self.visits = dict(visit=DummyVisit())
+        self.visit_model_cls = SubjectVisit
 
 
 class DummySite:
