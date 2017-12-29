@@ -4,9 +4,7 @@ from datetime import date
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ObjectDoesNotExist
 from django.test import TestCase, tag
-
 from edc_base.utils import get_utcnow
-from edc_sync.models import OutgoingTransaction
 
 from ..models import Reference, ReferenceFieldDatatypeNotFound
 from ..reference import ReferenceDeleter, ReferenceGetter
@@ -14,7 +12,7 @@ from ..reference import ReferenceObjectDoesNotExist
 from ..reference import ReferenceUpdater, ReferenceFieldNotFound
 from ..reference_model_config import ReferenceDuplicateField, ReferenceFieldValidationError
 from ..reference_model_config import ReferenceModelConfig
-from ..site import site_reference_configs, SiteReferenceConfigError
+from ..site import site_reference_configs
 from .models import CrfOne, SubjectVisit
 from .models import CrfWithUnknownDatatype, TestModel, SubjectRequisition
 
@@ -278,25 +276,23 @@ class TestReferenceModel(TestCase):
             fields=['blah1', 'blah2', 'blah3', 'blah4'])
         self.assertRaises(
             ReferenceFieldValidationError,
-            reference_config.validate)
+            reference_config.check)
 
-    def test_model_raises_on_bad_field_name_validated_by_site(self):
+    def test_model_raises_on_bad_field_name_checked_by_site(self):
         reference_config = ReferenceModelConfig(
             name='edc_reference.crfwithbadfield',
             fields=['blah1', 'blah2', 'blah3', 'blah4'])
         site_reference_configs.register(reference_config)
-        self.assertRaises(
-            SiteReferenceConfigError,
-            site_reference_configs.validate)
+        errors = site_reference_configs.check()
+        self.assertIsNotNone(errors)
 
     def test_raises_on_missing_model_mixin(self):
         reference_config = ReferenceModelConfig(
             name='edc_reference.TestModelBad',
             fields=['report_datetime'])
         site_reference_configs.register(reference_config)
-        self.assertRaises(
-            SiteReferenceConfigError,
-            site_reference_configs.validate)
+        errors = site_reference_configs.check()
+        self.assertIsNotNone(errors)
 
     def test_model_raises_on_unknown_field_datatype(self):
         reference_config = ReferenceModelConfig(
@@ -348,7 +344,7 @@ class TestReferenceModel(TestCase):
             model_obj=crf_one)
         self.assertEqual(reference.field_int, None)
 
-    def test_site_validates_no_fields_raises(self):
+    def test_site_checks_no_fields_raises(self):
         name = 'edc_reference.crfone'
         site_reference_configs.registry = {}
         self.assertRaises(
@@ -357,7 +353,7 @@ class TestReferenceModel(TestCase):
             fields=[],
             name=name)
 
-    def test_site_validates_no_fields_raises2(self):
+    def test_site_checks_no_fields_raises2(self):
         name = 'edc_reference.crfone'
         site_reference_configs.registry = {}
         self.assertRaises(

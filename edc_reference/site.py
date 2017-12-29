@@ -1,8 +1,9 @@
 import copy
 import sys
+
 from django.apps import apps as django_apps
 from django.utils.module_loading import import_module, module_has_submodule
-from django.core.management.color import color_style
+from edc_visit_schedule.site_visit_schedules import site_visit_schedules
 
 from .reference_model_config import ReferenceDuplicateField, ReferenceModelValidationError
 from .reference_model_config import ReferenceFieldValidationError
@@ -54,6 +55,7 @@ class Site:
     def __init__(self):
         self.registry = {}
         self.loaded = False
+        self.registered_from_visit_schedules = False
 
     def register(self, reference=None):
         if reference.name in self.registry:
@@ -85,7 +87,8 @@ class Site:
             reference_config = None
         if not reference_config:
             raise SiteReferenceConfigError(
-                f'Model not registered. Got {name}. Expected one of {list(self.registry.keys())}.')
+                f'Model not registered. Got {name}. Expected one of '
+                f'{list(self.registry.keys())}.')
         return reference_config
 
     def get_fields(self, name=None):
@@ -100,25 +103,19 @@ class Site:
         """
         return self.get_config(name=name).reference_model
 
-    def validate(self):
+    def check(self):
         """Validates the reference data for all classes in the
         registry.
         """
-        style = color_style()
-        sys.stdout.write('Validating site reference models and fields.\n')
-        for name, reference in self.registry.items():
-            sys.stdout.write(f' (*) {name} ...    \r')
+        errors = {}
+        for name in self.registry:
+            reference_config = self.get_config(name)
             try:
-                reference.validate()
+                reference_config.check()
             except (ReferenceDuplicateField, ReferenceModelValidationError,
                     ReferenceFieldValidationError) as e:
-                sys.stdout.write(
-                    f' ( ) {name}. {style.ERROR("ERROR!!")}    \n')
-                raise SiteReferenceConfigError(e) from e
-            else:
-                sys.stdout.write(
-                    f' (*) {name}. {style.SUCCESS("OK")}    \n')
-        sys.stdout.write('Done.\n')
+                errors.update({name: str(e)})
+        return errors
 
     def autodiscover(self, module_name=None):
         """Autodiscovers classes in the reference_model_configs.py file of any
@@ -139,19 +136,17 @@ class Site:
                     if f'No module named \'{app}.{module_name}\'' not in str(e):
                         site_reference_configs.registry = before_import_registry
                         if module_has_submodule(mod, module_name):
-                            raise SiteReferenceConfigImportError(e) from e
+                            raise
             except ImportError:
                 pass
 
-    def register_from_visit_schedule(self, site_visit_schedules=None, autodiscover=None):
-        autodiscover = True if autodiscover is None else autodiscover
-        if autodiscover:
-            site_visit_schedules.autodiscover(verbose=False)
+    def register_from_visit_schedule(self, visit_models=None):
+        self.registered_visit_model = True
+        site_visit_schedules.autodiscover(verbose=False)
         for visit_schedule in site_visit_schedules.registry.values():
-
             for schedule in visit_schedule.schedules.values():
                 reference = self.reference_updater.update(
-                    name=schedule.visit_model_cls._meta.label_lower,
+                    name=visit_models[schedule.appointment_model],
                     fields=['report_datetime'],
                     get_config=self.get_config)
                 self._register_if_new(reference)

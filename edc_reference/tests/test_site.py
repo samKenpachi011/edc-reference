@@ -1,15 +1,20 @@
 from django.test import TestCase, tag
+from edc_visit_schedule.site_visit_schedules import site_visit_schedules
 
 from ..reference_model_config import ReferenceModelConfig
 from ..reference_model_config import ReferenceFieldValidationError, ReferenceDuplicateField
 from ..reference_model_config import ReferenceModelValidationError
 from ..site import site_reference_configs
-from ..site import AlreadyRegistered, SiteReferenceConfigImportError
+from ..site import AlreadyRegistered
 from ..site import SiteReferenceConfigError, ReferenceConfigNotRegistered
-from .dummy import DummySite, DummyVisitSchedule, DummySchedule
+from .visit_schedule import visit_schedule
 
 
 class TestSite(TestCase):
+
+    def setUp(self):
+        site_visit_schedules._registry = {}
+        site_visit_schedules.register(visit_schedule)
 
     def test_site_register(self):
         name = 'edc_reference.crfone'
@@ -44,47 +49,47 @@ class TestSite(TestCase):
 
     def test_autodiscover_bad(self):
         self.assertRaises(
-            SiteReferenceConfigImportError,
+            TypeError,
             site_reference_configs.autodiscover,
             module_name='tests.reference_model_configs_bad')
 
-    def test_validate_ok(self):
+    def test_check_ok(self):
         name = 'edc_reference.crfone'
         fields = [
             'field_str', 'field_date', 'field_datetime', 'field_int']
         site_reference_configs.registry = {}
         reference = ReferenceModelConfig(fields=fields, name=name)
         try:
-            reference.validate()
+            reference.check()
         except (ReferenceFieldValidationError, ReferenceModelValidationError) as e:
             self.fail(
                 f'Reference validation error unexpectedly raised. Got{e}')
 
-    def test_validate_ok2(self):
+    def test_check_ok2(self):
         name = 'edc_reference.crfone'
         site_reference_configs.registry = {}
         reference = ReferenceModelConfig(
             fields=['field_str', 'field_date', 'field_datetime', 'field_int'],
             name=name)
         site_reference_configs.register(reference=reference)
-        site_reference_configs.validate()
+        site_reference_configs.check()
 
-    def test_validate_bad_model(self):
+    def test_check_bad_model(self):
         name = 'edc_reference.erik'
         fields = ['f1']
         reference = ReferenceModelConfig(fields=fields, name=name)
         self.assertRaises(
             ReferenceModelValidationError,
-            reference.validate)
+            reference.check)
 
-    def test_validate_bad_fields(self):
+    def test_check_bad_fields(self):
         name = 'edc_reference.crfone'
         fields = ['f1']
         site_reference_configs.registry = {}
         reference = ReferenceModelConfig(fields=fields, name=name)
         self.assertRaises(
             ReferenceFieldValidationError,
-            reference.validate)
+            reference.check)
 
     def test_raises_on_duplicate_field_name(self):
         name = 'edc_reference.crfone'
@@ -117,6 +122,7 @@ class TestSite(TestCase):
             site_reference_configs.reregister, reference)
 
     def test_get_config(self):
+        site_reference_configs.registry = {}
         name = 'edc_reference.crfone'
         fields = ['f1']
         reference = ReferenceModelConfig(fields=fields, name=name)
@@ -128,29 +134,19 @@ class TestSite(TestCase):
             site_reference_configs.get_config, name=None)
 
     def test_register_reference_models_from_visit_schedule(self):
-        site_visit_schedules = DummySite()
-        visit_schedule = DummyVisitSchedule()
-        schedule = DummySchedule()
-        visit_schedule.schedules.update(schedule=schedule)
-        site_visit_schedules.registry.update(visit_schedule=visit_schedule)
         site_reference_configs.registry = {}
         site_reference_configs.register_from_visit_schedule(
-            site_visit_schedules=site_visit_schedules)
+            visit_models={'edc_appointment.appointment': 'edc_reference.subjectvisit'})
         self.assertTrue(
             site_reference_configs.get_config(name='edc_reference.crfone'))
 
     def test_reregister_reference_models_from_visit_schedule(self):
-        site_visit_schedules = DummySite()
-        visit_schedule = DummyVisitSchedule()
-        schedule = DummySchedule()
-        visit_schedule.schedules.update(schedule=schedule)
-        site_visit_schedules.registry.update(visit_schedule=visit_schedule)
         site_reference_configs.registry = {}
         site_reference_configs.register_from_visit_schedule(
-            site_visit_schedules=site_visit_schedules)
+            visit_models={'edc_appointment.appointment': 'edc_reference.subjectvisit'})
         # do again
         site_reference_configs.register_from_visit_schedule(
-            site_visit_schedules=site_visit_schedules)
+            visit_models={'edc_appointment.appointment': 'edc_reference.subjectvisit'})
         self.assertTrue(
             site_reference_configs.get_config(name='edc_reference.crfone'))
 

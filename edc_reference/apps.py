@@ -1,8 +1,10 @@
 import sys
 
 from django.apps import AppConfig as DjangoAppConfig
+from django.core.checks.registry import register
 
 from .site import site_reference_configs
+from .system_checks import check_site_reference_configs
 
 
 class AppConfig(DjangoAppConfig):
@@ -16,3 +18,4 @@ class AppConfig(DjangoAppConfig):
         site_reference_configs.autodiscover()
 
         sys.stdout.write(f' Done loading {self.verbose_name}.\n')
+        register(check_site_reference_configs)

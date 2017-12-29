@@ -51,15 +51,15 @@ class ReferenceModelConfig:
     def __repr__(self):
         return f'{self.__class__.__name__}(name={self.name}, fields={self.field_names})'
 
-    def validate(self):
+    def check(self):
         """Validates the model class by doing a django.get_model lookup
         and confirming all fields exist on the model class.
         """
         try:
             model_cls = django_apps.get_model(self.model)
-        except LookupError as e:
+        except LookupError:
             raise ReferenceModelValidationError(
-                f'Invalid model. Got {self.model}, {e}. See {repr(self)}.')
+                f'Invalid app label or model name. Got {self.model}. See {repr(self)}.')
         model_field_names = [fld.name for fld in model_cls._meta.get_fields()]
         for field_name in self.field_names:
             if field_name not in model_field_names:
