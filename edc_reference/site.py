@@ -141,6 +141,11 @@ class Site:
                 pass
 
     def register_from_visit_schedule(self, visit_models=None):
+        """Registers CRFs and Requisitions for all visits
+        under schedules using this visit model.
+
+        Note: Unscheduled and PRN forms are automatically add as well.
+        """
         self.registered_visit_model = True
         site_visit_schedules.autodiscover(verbose=False)
         for visit_schedule in site_visit_schedules.registry.values():
@@ -151,13 +156,13 @@ class Site:
                     get_config=self.get_config)
                 self._register_if_new(reference)
                 for visit in schedule.visits.values():
-                    for crf in visit.crfs:
+                    for crf in visit.all_crfs:
                         reference = self.reference_updater.update(
                             name=crf.model,
                             fields=['report_datetime'],
                             get_config=self.get_config)
                         self._register_if_new(reference)
-                    for requisition in visit.requisitions:
+                    for requisition in visit.all_requisitions:
                         reference = self.reference_updater.update(
                             name=get_reference_name(
                                 requisition.model, requisition.panel.name),
