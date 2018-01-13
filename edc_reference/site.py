@@ -140,12 +140,17 @@ class Site:
             except ImportError:
                 pass
 
-    def register_from_visit_schedule(self, visit_models=None):
+    def register_from_visit_schedule(self, visit_models=None, extra_requisition_fields=None):
         """Registers CRFs and Requisitions for all visits
         under schedules using this visit model.
 
         Note: Unscheduled and PRN forms are automatically add as well.
         """
+        requisition_fields = ['requisition_datetime', 'panel_name', 'is_drawn',
+                              'reason_not_drawn']
+        requisition_fields.extend(extra_requisition_fields or [])
+        requisition_fields = list(set(requisition_fields))
+
         self.registered_visit_model = True
         site_visit_schedules.autodiscover(verbose=False)
         for visit_schedule in site_visit_schedules.registry.values():
@@ -166,8 +171,7 @@ class Site:
                         reference = self.reference_updater.update(
                             name=get_reference_name(
                                 requisition.model, requisition.panel.name),
-                            fields=['requisition_datetime', 'panel_name', 'is_drawn',
-                                    'reason_not_drawn'],
+                            fields=requisition_fields,
                             get_config=self.get_config)
                         self._register_if_new(reference)
 
