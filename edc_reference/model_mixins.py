@@ -1,7 +1,6 @@
 from django.db import models
 
 from .reference import ReferenceDeleter, ReferenceUpdater
-from .utils import get_reference_name
 
 
 class ReferenceModelMixinError(Exception):
@@ -23,9 +22,9 @@ class ReferenceModelMixin(models.Model):
         return self._meta.label_lower
 
     def model_reference_validate(self):
-        if 'panel_name' in [f.name for f in self._meta.get_fields()]:
+        if 'panel' in [f.name for f in self._meta.get_fields()]:
             raise ReferenceModelMixinError(
-                'Detected field panel_name. Is this a requisition?. '
+                'Detected field panel. Is this a requisition?. '
                 'Use RequisitionReferenceModelMixin '
                 'instead of ReferenceModelMixin')
 
@@ -37,12 +36,12 @@ class RequisitionReferenceModelMixin(ReferenceModelMixin, models.Model):
 
     @property
     def reference_name(self):
-        return get_reference_name(self._meta.label_lower, self.panel_name)
+        return f'{self._meta.label_lower}.{self.panel.name}'
 
     def model_reference_validate(self):
-        if 'panel_name' not in [f.name for f in self._meta.get_fields()]:
+        if 'panel' not in [f.name for f in self._meta.get_fields()]:
             raise ReferenceModelMixinError(
-                'Did not detect field panel_name. Is this a CRF?. '
+                'Did not detect field panel. Is this a CRF?. '
                 'Use ReferenceModelMixin '
                 'instead of RequisitionReferenceModelMixin')
 
