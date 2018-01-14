@@ -3,6 +3,7 @@ from django.db.models.deletion import PROTECT
 
 from edc_base.model_mixins import BaseUuidModel
 from edc_base.utils import get_utcnow
+from edc_lab.models.model_mixins import PanelModelMixin
 
 from ..model_mixins import ReferenceModelMixin, RequisitionReferenceModelMixin
 
@@ -26,7 +27,8 @@ class SubjectVisit(ReferenceModelMixin, BaseUuidModel):
     visit_code = models.CharField(max_length=50)
 
 
-class SubjectRequisition(CrfModelMixin, RequisitionReferenceModelMixin, BaseUuidModel):
+class SubjectRequisition(CrfModelMixin, PanelModelMixin, RequisitionReferenceModelMixin,
+                         BaseUuidModel):
 
     subject_visit = models.ForeignKey(SubjectVisit, on_delete=PROTECT)
 
@@ -104,4 +106,4 @@ class CrfWithUnknownDatatype(CrfModelMixin, ReferenceModelMixin, BaseUuidModel):
 
     report_datetime = models.DateTimeField(default=get_utcnow)
 
-    field_uuid = models.UUIDField()
+    field_decimal = models.DecimalField(decimal_places=2, max_digits=10)

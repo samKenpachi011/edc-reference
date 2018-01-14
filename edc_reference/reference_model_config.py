@@ -25,7 +25,7 @@ class ReferenceModelConfig:
         """
         Keywords:
             name = app_label.model_name for CRFs
-            name = app_label.model_name.panel_name for Requisitions
+            name = app_label.model_name.panel for Requisitions
         """
 
         if not fields:

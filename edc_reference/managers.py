@@ -1,6 +1,5 @@
 from django.db import models
 from django.core.exceptions import ObjectDoesNotExist
-from django.utils.text import slugify
 
 
 class ReferenceManager(models.Manager):
@@ -48,7 +47,7 @@ class ReferenceManager(models.Manager):
             model=name,
             report_datetime=visit.report_datetime,
             timepoint=visit.visit_code,
-            field_name='panel_name')
+            field_name='panel')
         try:
             model_obj = self.get(**opts)
         except ObjectDoesNotExist:

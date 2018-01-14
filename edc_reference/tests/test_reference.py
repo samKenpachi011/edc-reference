@@ -5,6 +5,7 @@ from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ObjectDoesNotExist
 from django.test import TestCase, tag
 from edc_base.utils import get_utcnow
+from edc_lab.models.panel import Panel
 
 from ..models import Reference, ReferenceFieldDatatypeNotFound
 from ..reference import ReferenceDeleter, ReferenceGetter
@@ -20,6 +21,9 @@ from .models import CrfWithUnknownDatatype, TestModel, SubjectRequisition
 class TestReferenceModel(TestCase):
 
     def setUp(self):
+        self.panel_cd4 = Panel.objects.create(name='cd4')
+        self.panel_vl = Panel.objects.create(name='vl')
+        self.panel_wb = Panel.objects.create(name='wb')
         site_reference_configs.registry = {}
         self.subject_identifier = '1'
         subjectvisit_reference = ReferenceModelConfig(
@@ -297,13 +301,13 @@ class TestReferenceModel(TestCase):
     def test_model_raises_on_unknown_field_datatype(self):
         reference_config = ReferenceModelConfig(
             name='edc_reference.CrfWithUnknownDatatype',
-            fields=['field_uuid'])
+            fields=['field_decimal'])
         site_reference_configs.register(reference_config)
         self.assertRaises(
             ReferenceFieldDatatypeNotFound,
             CrfWithUnknownDatatype.objects.create,
             subject_visit=self.subject_visit,
-            field_uuid=uuid4())
+            field_decimal=3.2)
 
     def test_getter_repr(self):
         crf_one = CrfOne.objects.create(
@@ -457,14 +461,14 @@ class TestReferenceModel(TestCase):
     def test_model_manager_requisition(self):
         reference_config = ReferenceModelConfig(
             name='edc_reference.subjectrequisition.cd4',
-            fields=['panel_name'])
+            fields=['panel'])
         site_reference_configs.register(reference_config)
         SubjectRequisition.objects.create(
             subject_visit=self.subject_visit,
-            panel_name='cd4')
+            panel=self.panel_cd4)
         obj = Reference.objects.get_requisition_for_visit(
             'edc_reference.subjectrequisition.cd4', self.subject_visit)
-        self.assertEqual(obj.value, 'cd4')
+        self.assertEqual(obj.value, self.panel_cd4.id)
         obj = Reference.objects.get_requisition_for_visit(
             'edc_reference.subjectrequisition.blah', self.subject_visit)
         self.assertIsNone(obj)
@@ -472,24 +476,24 @@ class TestReferenceModel(TestCase):
     def test_requisition_creates_two(self):
         reference_config = ReferenceModelConfig(
             name='edc_reference.subjectrequisition.cd4',
-            fields=['panel_name'])
+            fields=['panel'])
         site_reference_configs.register(reference_config)
         reference_config = ReferenceModelConfig(
             name='edc_reference.subjectrequisition.vl',
-            fields=['panel_name'])
+            fields=['panel'])
         site_reference_configs.register(reference_config)
         SubjectRequisition.objects.create(
             subject_visit=self.subject_visit,
-            panel_name='cd4')
+            panel=self.panel_cd4)
         SubjectRequisition.objects.create(
             subject_visit=self.subject_visit,
-            panel_name='vl')
+            panel=self.panel_vl)
         obj = Reference.objects.get_requisition_for_visit(
             'edc_reference.subjectrequisition.vl', self.subject_visit)
-        self.assertEqual(obj.value, 'vl')
+        self.assertEqual(obj.value, self.panel_vl.id)
         obj = Reference.objects.get_requisition_for_visit(
             'edc_reference.subjectrequisition.cd4', self.subject_visit)
-        self.assertEqual(obj.value, 'cd4')
+        self.assertEqual(obj.value, self.panel_cd4.id)
         obj = Reference.objects.get_requisition_for_visit(
             'edc_reference.subjectrequisition.blah', self.subject_visit)
         self.assertIsNone(obj)
@@ -497,32 +501,32 @@ class TestReferenceModel(TestCase):
     def test_requisition_creates2(self):
         reference_config = ReferenceModelConfig(
             name='edc_reference.subjectrequisition.cd4',
-            fields=['panel_name'])
+            fields=['panel'])
         site_reference_configs.register(reference_config)
         reference_config = ReferenceModelConfig(
             name='edc_reference.subjectrequisition.vl',
-            fields=['panel_name'])
+            fields=['panel'])
         site_reference_configs.register(reference_config)
         reference_config = ReferenceModelConfig(
             name='edc_reference.subjectrequisition.wb',
-            fields=['panel_name'])
+            fields=['panel'])
         site_reference_configs.register(reference_config)
 
         SubjectRequisition.objects.create(
             subject_visit=self.subject_visit,
-            panel_name='vl')
+            panel=self.panel_vl)
         SubjectRequisition.objects.create(
             subject_visit=self.subject_visit,
-            panel_name='cd4')
+            panel=self.panel_cd4)
         SubjectRequisition.objects.create(
             subject_visit=self.subject_visit,
-            panel_name='wb')
+            panel=self.panel_wb)
 
-        for panel in ['cd4', 'vl', 'wb']:
+        for panel in [self.panel_cd4, self.panel_vl, self.panel_wb]:
             with self.subTest(panel=panel):
                 Reference.objects.get(
-                    model=f'edc_reference.subjectrequisition.{panel}',
+                    model=f'edc_reference.subjectrequisition.{panel.name}',
                     report_datetime=self.subject_visit.report_datetime,
                     timepoint=self.subject_visit.visit_code,
-                    field_name='panel_name',
-                    value_str=panel)
+                    field_name='panel',
+                    value_uuid=panel.id)

@@ -16,14 +16,14 @@ class Command(BaseCommand):
             nargs='*',
             default=None,
             help=(
-                'run for a select list of reference names (label_lower or lanel_lower.panel_name)'),
+                'run for a select list of reference names (label_lower or panel_name)'),
         )
         parser.add_argument(
             '--exclude_names',
             dest='exclude_names',
             nargs='*',
             default=None,
-            help='exclude reference names (label_lower or lanel_lower.panel_name)')
+            help='exclude reference names (label_lower or panel_name)')
 
         parser.add_argument(
             '--skip-existing',

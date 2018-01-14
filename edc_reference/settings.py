@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'edc_device.apps.AppConfig',
+    'edc_lab.apps.AppConfig',
     'edc_reference.apps.AppConfig',
 ]
 

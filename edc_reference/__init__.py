@@ -5,4 +5,3 @@ from .reference import ReferenceUpdater
 from .reference import ReferenceFieldNotFound
 from .reference_model_config import ReferenceModelConfig
 from .site import site_reference_configs, ReferenceDuplicateField
-from .utils import get_reference_name

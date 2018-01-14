@@ -4,12 +4,12 @@ import sys
 from django.apps import apps as django_apps
 from django.utils.module_loading import import_module, module_has_submodule
 from edc_visit_schedule.site_visit_schedules import site_visit_schedules
+from edc_lab.site_labs import site_labs
 
 from .reference_model_config import ReferenceDuplicateField, ReferenceModelValidationError
 from .reference_model_config import ReferenceFieldValidationError
 from .reference_model_config import ReferenceModelConfig
 from .reference_model_config import ReferenceFieldAlreadyAdded
-from .utils import get_reference_name
 
 
 class AlreadyRegistered(Exception):
@@ -137,7 +137,7 @@ class Site:
                         site_reference_configs.registry = before_import_registry
                         if module_has_submodule(mod, module_name):
                             raise
-            except ImportError:
+            except ModuleNotFoundError:
                 pass
 
     def register_from_visit_schedule(self, visit_models=None, extra_requisition_fields=None):
@@ -146,12 +146,13 @@ class Site:
 
         Note: Unscheduled and PRN forms are automatically add as well.
         """
-        requisition_fields = ['requisition_datetime', 'panel_name', 'is_drawn',
+        requisition_fields = ['requisition_datetime', 'panel', 'is_drawn',
                               'reason_not_drawn']
         requisition_fields.extend(extra_requisition_fields or [])
         requisition_fields = list(set(requisition_fields))
 
         self.registered_visit_model = True
+        site_labs.autodiscover(verbose=False)
         site_visit_schedules.autodiscover(verbose=False)
         for visit_schedule in site_visit_schedules.registry.values():
             for schedule in visit_schedule.schedules.values():
@@ -168,9 +169,15 @@ class Site:
                             get_config=self.get_config)
                         self._register_if_new(reference)
                     for requisition in visit.all_requisitions:
+                        if not requisition.panel.requisition_model:
+                            raise SiteReferenceConfigError(
+                                'Requisition\'s panel \'requisition_model\' attribute '
+                                f'not set. See "{requisition}". Has the requisition '
+                                'been added to a lab profile and registered? Is the '
+                                'APP in INSTALLED_APPS? Currently '
+                                f'registered lab profiles are {list(site_labs._registry)}.')
                         reference = self.reference_updater.update(
-                            name=get_reference_name(
-                                requisition.model, requisition.panel.name),
+                            name=f'{requisition.model}.{requisition.panel.name}',
                             fields=requisition_fields,
                             get_config=self.get_config)
                         self._register_if_new(reference)
