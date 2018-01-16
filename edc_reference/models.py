@@ -1,16 +1,16 @@
 from django.db import models
-
 from edc_base.model_mixins import BaseUuidModel
+from edc_base.sites.managers import CurrentSiteManager
+from edc_base.sites.site_model_mixin import SiteModelMixin
 
 from .managers import ReferenceManager
-from pprint import pprint
 
 
 class ReferenceFieldDatatypeNotFound(Exception):
     pass
 
 
-class Reference(BaseUuidModel):
+class Reference(SiteModelMixin, BaseUuidModel):
 
     identifier = models.CharField(max_length=50)
 
@@ -36,6 +36,8 @@ class Reference(BaseUuidModel):
 
     related_name = models.CharField(max_length=100, null=True)
 
+    on_site = CurrentSiteManager()
+
     objects = ReferenceManager()
 
     def __str__(self):
@@ -45,6 +47,7 @@ class Reference(BaseUuidModel):
     def natural_key(self):
         return (self.identifier, self.timepoint, self.report_datetime,
                 self.model, self.field_name)
+    natural_key.dependencies = ['sites.Site']
 
     def update_value(self, value=None, internal_type=None, field=None, related_name=None):
         """Updates the correct `value` field based on the
