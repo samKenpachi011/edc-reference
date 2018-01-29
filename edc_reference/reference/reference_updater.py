@@ -45,7 +45,16 @@ class ReferenceUpdater:
                     value = getattr(model_obj, field_name)
             else:
                 value = getattr(model_obj, field_name)
+            try:
+                value = value.pk
+            except AttributeError:
+                internal_type = field_obj.get_internal_type()
+                related_name = None
+            else:
+                internal_type = 'UUIDField'
+                related_name = getattr(model_obj, field_name)._meta.label_lower
             reference.object.update_value(
-                internal_type=field_obj.get_internal_type(),
-                value=value)
+                internal_type=internal_type,
+                value=value,
+                related_name=related_name)
             reference.object.save()

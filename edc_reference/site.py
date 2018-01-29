@@ -1,14 +1,15 @@
 import copy
 import sys
+
 from django.apps import apps as django_apps
 from django.utils.module_loading import import_module, module_has_submodule
-from django.core.management.color import color_style
+from edc_visit_schedule.site_visit_schedules import site_visit_schedules
+from edc_lab.site_labs import site_labs
 
 from .reference_model_config import ReferenceDuplicateField, ReferenceModelValidationError
 from .reference_model_config import ReferenceFieldValidationError
 from .reference_model_config import ReferenceModelConfig
 from .reference_model_config import ReferenceFieldAlreadyAdded
-from .utils import get_reference_name
 
 
 class AlreadyRegistered(Exception):
@@ -54,6 +55,7 @@ class Site:
     def __init__(self):
         self.registry = {}
         self.loaded = False
+        self.registered_from_visit_schedules = False
 
     def register(self, reference=None):
         if reference.name in self.registry:
@@ -85,7 +87,8 @@ class Site:
             reference_config = None
         if not reference_config:
             raise SiteReferenceConfigError(
-                f'Model not registered. Got {name}')
+                f'Model not registered. Got {name}. Expected one of '
+                f'{list(self.registry.keys())}.')
         return reference_config
 
     def get_fields(self, name=None):
@@ -100,25 +103,19 @@ class Site:
         """
         return self.get_config(name=name).reference_model
 
-    def validate(self):
+    def check(self):
         """Validates the reference data for all classes in the
         registry.
         """
-        style = color_style()
-        sys.stdout.write('Validating site reference models and fields.\n')
-        for name, reference in self.registry.items():
-            sys.stdout.write(f' (*) {name} ...    \r')
+        errors = {}
+        for name in self.registry:
+            reference_config = self.get_config(name)
             try:
-                reference.validate()
+                reference_config.check()
             except (ReferenceDuplicateField, ReferenceModelValidationError,
                     ReferenceFieldValidationError) as e:
-                sys.stdout.write(
-                    f' ( ) {name}. {style.ERROR("ERROR!!")}    \n')
-                raise SiteReferenceConfigError(e) from e
-            else:
-                sys.stdout.write(
-                    f' (*) {name}. {style.SUCCESS("OK")}    \n')
-        sys.stdout.write('Done.\n')
+                errors.update({name: str(e)})
+        return errors
 
     def autodiscover(self, module_name=None):
         """Autodiscovers classes in the reference_model_configs.py file of any
@@ -139,36 +136,49 @@ class Site:
                     if f'No module named \'{app}.{module_name}\'' not in str(e):
                         site_reference_configs.registry = before_import_registry
                         if module_has_submodule(mod, module_name):
-                            raise SiteReferenceConfigImportError(e) from e
-            except ImportError:
+                            raise
+            except ModuleNotFoundError:
                 pass
 
-    def register_from_visit_schedule(self, site_visit_schedules=None, autodiscover=None):
-        autodiscover = True if autodiscover is None else autodiscover
-        if autodiscover:
-            site_visit_schedules.autodiscover(verbose=False)
+    def register_from_visit_schedule(self, visit_models=None, extra_requisition_fields=None):
+        """Registers CRFs and Requisitions for all visits
+        under schedules using this visit model.
+
+        Note: Unscheduled and PRN forms are automatically add as well.
+        """
+        requisition_fields = ['requisition_datetime', 'panel', 'is_drawn',
+                              'reason_not_drawn']
+        requisition_fields.extend(extra_requisition_fields or [])
+        requisition_fields = list(set(requisition_fields))
+
+        self.registered_visit_model = True
+        site_labs.autodiscover(verbose=False)
+        site_visit_schedules.autodiscover(verbose=False)
         for visit_schedule in site_visit_schedules.registry.values():
-
-            reference = self.reference_updater.update(
-                name=visit_schedule.visit_model,
-                fields=['report_datetime'],
-                get_config=self.get_config)
-            self._register_if_new(reference)
-
             for schedule in visit_schedule.schedules.values():
+                reference = self.reference_updater.update(
+                    name=visit_models[schedule.appointment_model],
+                    fields=['report_datetime'],
+                    get_config=self.get_config)
+                self._register_if_new(reference)
                 for visit in schedule.visits.values():
-                    for crf in visit.crfs:
+                    for crf in visit.all_crfs:
                         reference = self.reference_updater.update(
                             name=crf.model,
                             fields=['report_datetime'],
                             get_config=self.get_config)
                         self._register_if_new(reference)
-                    for requisition in visit.requisitions:
+                    for requisition in visit.all_requisitions:
+                        if not requisition.panel.requisition_model:
+                            raise SiteReferenceConfigError(
+                                'Requisition\'s panel \'requisition_model\' attribute '
+                                f'not set. See "{requisition}". Has the requisition '
+                                'been added to a lab profile and registered? Is the '
+                                'APP in INSTALLED_APPS? Currently '
+                                f'registered lab profiles are {list(site_labs._registry)}.')
                         reference = self.reference_updater.update(
-                            name=get_reference_name(
-                                requisition.model, requisition.panel.name),
-                            fields=['requisition_datetime', 'panel_name', 'is_drawn',
-                                    'reason_not_drawn'],
+                            name=f'{requisition.model}.{requisition.panel.name}',
+                            fields=requisition_fields,
                             get_config=self.get_config)
                         self._register_if_new(reference)
 

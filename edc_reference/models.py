@@ -1,6 +1,6 @@
 from django.db import models
-
 from edc_base.model_mixins import BaseUuidModel
+from edc_base.sites import CurrentSiteManager, SiteModelMixin
 
 from .managers import ReferenceManager
 
@@ -9,7 +9,7 @@ class ReferenceFieldDatatypeNotFound(Exception):
     pass
 
 
-class Reference(BaseUuidModel):
+class Reference(SiteModelMixin, BaseUuidModel):
 
     identifier = models.CharField(max_length=50)
 
@@ -31,6 +31,12 @@ class Reference(BaseUuidModel):
 
     value_datetime = models.DateTimeField(null=True)
 
+    value_uuid = models.UUIDField(null=True)
+
+    related_name = models.CharField(max_length=100, null=True)
+
+    on_site = CurrentSiteManager()
+
     objects = ReferenceManager()
 
     def __str__(self):
@@ -40,20 +46,31 @@ class Reference(BaseUuidModel):
     def natural_key(self):
         return (self.identifier, self.timepoint, self.report_datetime,
                 self.model, self.field_name)
+    natural_key.dependencies = ['sites.Site']
 
-    def update_value(self, value=None, internal_type=None, field=None):
+    def update_value(self, value=None, internal_type=None, field=None, related_name=None):
         """Updates the correct `value` field based on the
         field class datatype.
         """
-        self.datatype = internal_type or field.get_internal_type()
+        internal_type = internal_type or field.get_internal_type()
+        if internal_type in ['ForeignKey', 'OneToOneField']:
+            self.datatype = 'UUIDField'
+        else:
+            self.datatype = internal_type
         update = None
-        for fld in self._meta.get_fields():
+        value_fields = [fld for fld in self._meta.get_fields()
+                        if fld.name.startswith('value')]
+        for fld in value_fields:
             if fld.name.startswith('value'):  # e.g. value_str, value_int, etc
                 if fld.get_internal_type() == self.datatype:
                     update = (fld.name, value)
                     break
         if update:
-            setattr(self, *update),
+            self.related_name = related_name
+            setattr(self, *update)
+            for fld in value_fields:
+                if fld.name != update[0]:
+                    setattr(self, fld.name, None)
         else:
             raise ReferenceFieldDatatypeNotFound(
                 f'Reference field internal_type not found. Got \'{self.datatype}\'. '
@@ -64,7 +81,8 @@ class Reference(BaseUuidModel):
 
     @property
     def value(self):
-        for field_name in ['value_str', 'value_int', 'value_date', 'value_datetime']:
+        for field_name in ['value_str', 'value_int', 'value_date',
+                           'value_datetime', 'value_uuid']:
             value = getattr(self, field_name)
             if value is not None:
                 break

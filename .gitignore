@@ -1,5 +1,4 @@
 db.sqlite3
-edc_reference/migrations/*
 .pydevproject
 .project
 .settings
