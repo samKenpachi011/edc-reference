@@ -156,6 +156,7 @@ class Site:
         site_visit_schedules.autodiscover(verbose=False)
         for visit_schedule in site_visit_schedules.registry.values():
             for schedule in visit_schedule.schedules.values():
+#                 for visit_model in visit_models[schedule.appointment_model]:
                 for visit_model in visit_models[schedule.appointment_model]:
                     reference = self.reference_updater.update(
                         name=visit_model,
