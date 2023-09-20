@@ -6,3 +6,4 @@ git+https://github.com/botswana-harvard/edc-protocol@develop#edc-protocol
 git+https://github.com/botswana-harvard/edc-identifier@develop#edc-identifier
 git+https://github.com/botswana-harvard/edc-device@develop#egg=edc-device
 git+https://github.com/botswana-harvard/edc-sync@develop#edc-sync
+git+https://github.com/botswana-harvard/edc-visit-schedule.git@develop#egg=edc_visit_schedule
