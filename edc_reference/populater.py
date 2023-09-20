@@ -53,10 +53,10 @@ class Populater:
             f' - running for {len(self.names)} selected reference names.\n')
         if self.skip_existing:
             sys.stdout.write(
-                f' - skipping reference names with existing references\n')
+                ' - skipping reference names with existing references\n')
         if self.dry_run:
             sys.stdout.write(
-                f' - This is a dry run. No data will be created/modified.\n')
+                ' - This is a dry run. No data will be created/modified.\n')
 
         names = [name for name in self.names if not self.skip(name=name)]
 
@@ -66,11 +66,11 @@ class Populater:
         sys.stdout.write(f' * models are {names}    \n')
 
         if self.delete_existing:
-            sys.stdout.write(f' * deleting existing records ... \r')
+            sys.stdout.write(' * deleting existing records ... \r')
             if not self.dry_run:
                 for name in names:
                     Reference.objects.filter(model=name).delete()
-            sys.stdout.write(f' * deleting existing records ... done.\n')
+            sys.stdout.write(' * deleting existing records ... done.\n')
 
         for name in names:
             index = 0

@@ -33,7 +33,8 @@ class TestReferenceModel(TestCase):
             name='edc_reference.testmodel', fields=['field_str', 'report_datetime'])
         self.crfone_reference = ReferenceModelConfig(
             name='edc_reference.crfone',
-            fields=['field_str', 'field_date', 'field_datetime', 'field_int', 'report_datetime'])
+            fields=['field_str', 'field_date', 'field_datetime',
+                    'field_int', 'report_datetime'])
         site_reference_configs.register(subjectvisit_reference)
         site_reference_configs.register(self.testmodel_reference)
         site_reference_configs.register(self.crfone_reference)

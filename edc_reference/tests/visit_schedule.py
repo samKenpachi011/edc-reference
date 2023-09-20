@@ -6,7 +6,7 @@ from dateutil.relativedelta import relativedelta
 
 
 crfs = FormsCollection(
-    Crf(show_order=1, model=f'edc_reference.crfone', required=True),
+    Crf(show_order=1, model='edc_reference.crfone', required=True),
 )
 
 

@@ -33,7 +33,8 @@ class ReferenceTestHelper:
     def filter(self, **kwargs):
         return self.reference_model_cls.objects.filter(**kwargs)
 
-    def create_for_model(self, reference_name=None, report_datetime=None, visit_code=None, **options):
+    def create_for_model(self, reference_name=None,
+                         report_datetime=None, visit_code=None, **options):
         for field_name in site_reference_configs.get_fields(name=reference_name):
             reference = self.reference_model_cls.objects.create(
                 model=reference_name,

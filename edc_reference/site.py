@@ -156,7 +156,7 @@ class Site:
         site_visit_schedules.autodiscover(verbose=False)
         for visit_schedule in site_visit_schedules.registry.values():
             for schedule in visit_schedule.schedules.values():
-#                 for visit_model in visit_models[schedule.appointment_model]:
+                # for visit_model in visit_models[schedule.appointment_model]:
                 for visit_model in visit_models[schedule.appointment_model]:
                     reference = self.reference_updater.update(
                         name=visit_model,
@@ -177,7 +177,8 @@ class Site:
                                     f'not set. See "{requisition}". Has the requisition '
                                     'been added to a lab profile and registered? Is the '
                                     'APP in INSTALLED_APPS? Currently '
-                                    f'registered lab profiles are {list(site_labs._registry)}.')
+                                    'registered lab profiles are '
+                                    f'{list(site_labs._registry)}.')
                             reference = self.reference_updater.update(
                                 name=f'{requisition.model}.{requisition.panel.name}',
                                 fields=requisition_fields,

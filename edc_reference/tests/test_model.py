@@ -11,7 +11,7 @@ class TestModel(TestCase):
 
     def test_model_update(self):
         reference = self.reference_model_cls.objects.create(
-            model=f'edc_reference.testmodel',
+            model='edc_reference.testmodel',
             identifier=self.subject_identifier,
             report_datetime=get_utcnow(),
             field_name='field_name')
