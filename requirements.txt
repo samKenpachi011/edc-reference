@@ -9,3 +9,4 @@ git+https://github.com/botswana-harvard/edc-sync@develop#edc-sync
 git+https://github.com/botswana-harvard/edc-visit-schedule.git@develop#egg=edc_visit_schedule
 git+https://github.com/botswana-harvard/edc-appointment.git@develop#egg=edc_appointment
 git+https://github.com/botswana-harvard/edc-facility.git@develop#egg=edc_facility
+git+https://github.com/botswana-harvard/edc-lab.git@develop#egg=edc_lab
