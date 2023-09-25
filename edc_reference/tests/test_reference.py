@@ -396,8 +396,8 @@ class TestReferenceModel(TestCase):
             subject_visit=self.subject_visit,
             field_int=integer)
         self.assertRaises(
-            Exception,
-            reference=ReferenceGetter,
+            ReferenceObjectDoesNotExist,
+            ReferenceGetter,
             name='edc_reference.crfone',
             field_name='blah',
             model_obj=crf_one)
@@ -411,10 +411,9 @@ class TestReferenceModel(TestCase):
 
     def test_reference_getter_doesnotexist(self):
         self.assertRaises(
-            Exception,
-            reference=ReferenceGetter,
+            ReferenceObjectDoesNotExist,
+            ReferenceGetter,
             field_name='blah',
-            model='edc_reference.crfone',
             model_obj=self.subject_visit)
 
     def test_model_manager_crf(self):

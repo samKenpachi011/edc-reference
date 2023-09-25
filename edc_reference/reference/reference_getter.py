@@ -52,7 +52,7 @@ class ReferenceGetter:
         reference_model_cls = django_apps.get_model(reference_model)
         try:
             self.object = reference_model_cls.objects.get(**self._options)
-        except reference_model_cls.DoesNotExist as e:
+        except ObjectDoesNotExist as e:
             if create:
                 self.object = reference_model_cls.objects.create(
                     **self._options)
